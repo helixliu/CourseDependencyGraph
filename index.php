@@ -23,9 +23,11 @@
 
             <div id="sidePanel">
                 <form id="courses"> 
-                    <input type="button" value="Add Dependency Edges" id="addDependencyEdges" /><br />
-                    <input type="button" value="Remove Dependency Edges" id="removeDependencyEdges" /><br />
+                    <input type="button" value="Display Entire Course Dependency Graph" id="displayEntireDependencyGraph" /><br />
+                    <input type="button" value="Clear Graph" id="clearGraph" /><br /><br />
+                    <label><b>Courses</b></label><br />
                     <input type="button" value="CS111: Introduction to Computer Science" id="CS111" /><br />
+                    <input type="button" value="CS112: Data Structures" id="CS112" /><br />
                 </form>
             </div>
         </div>
@@ -53,6 +55,7 @@
                 var precisionValue = 0.6;
             
                 //call constructor to create the Particle System
+                //The user will be able to interact and modify this particle system.
                 var particleSystem = arbor.ParticleSystem(
                     {repulsion:repulsionValue, 
                     stiffness:stiffnessValue,
@@ -77,7 +80,7 @@
                     "CS205" : {"Name": "Introduction to Discrete Structures I", "Prerequisite" : ["CS111","MAT152"]},
                     "CS206" : {"Name": "Introduction to Discrete Structures II", "Prerequisite" : ["CS205"]},
                     "CS211" : {"Name": "Computer Architecture", "Prerequisite" : ["CS112"]},
-                    "CS214" : {"Name": "Systems Programming", "Prerequisite" : ["CS214"]},
+                    "CS214" : {"Name": "Systems Programming", "Prerequisite" : ["CS211"]},
                     "CS314" : {"Name": "Principles of Programming Languages", "Prerequisite" : ["CS112","CS205"]},
                     "CS323" : {"Name": "Numerical Analysis and Computing", "Prerequisite" : ["MAT152","MAT250"]},
                     "CS336" : {"Name": "Principles of Information and Data Management", "Prerequisite" : ["CS112"]},
@@ -92,18 +95,87 @@
                     "CS440" : {"Name": "Introduction to Artificial Intelligence", "Prerequisite" : ["CS314"]}
                  };
                  
-                 //Iterate array to create nodes in Particle System
-                 for(key in courseArray)
-                 {
-                     var nodeId = key; //String Identifier of Node; Course code is used as the key
-                     var nodeData = {mass:1, label:nodeId, 'color':'grey', 'shape':'dot'}; //node data(key-value pair)
-                     particleSystem.addNode(nodeId, nodeData); //add a node to the Particle System
-                 }
-                
+                var outgoingEdgeGraphArray = {}; //create object; this will contain the outgoing edges of each node
+                 
                 //Trigger Event buttons
-                document.getElementById('addDependencyEdges').onclick = function(){addDependencyEdges(courseArray)};
-                document.getElementById('removeDependencyEdges').onclick = function(){removeDependencyEdges(courseArray)};
-                document.getElementById('CS111').onclick = function(){changeNodeState("CS111")};
+                document.getElementById('displayEntireDependencyGraph').onclick = function(){createEntireCourseDependencyGraph(particleSystem)};
+                document.getElementById('clearGraph').onclick = function(){clearEntireGraph(particleSystem)};
+                //document.getElementById('CS111').onclick = function(){changeNodeState("CS111")};
+                
+                
+                document.getElementById('CS111').onclick = function(){determineAllOutgoingEdges()};
+                document.getElementById('CS112').onclick = function(){printAllOutgoingEdges()};
+                
+                
+                /*
+                 * Determine all the outgoing edges for each node.     
+                 * This will populate the outgoingEdgeGraphArray.
+                 * NodeId : outgoingEdgeArray[]
+                 */
+                function determineAllOutgoingEdges()
+                {
+                    //iterate all the courses
+                    for(var courseCode in courseArray)
+                    {
+                        var courseObj = courseArray[courseCode];
+                        var coursePrereq = courseObj.Prerequisite;
+                                                  
+                        //Check if field property exist
+                        if(!(typeof coursePrereq === 'undefined'))
+                        {
+                            //iterate all of a course prerequisites
+                            for(var i = 0; i < coursePrereq.length; i++)
+                            {
+                                var prereq = coursePrereq[i];
+                                
+                                //Check if value is an instance of an array
+                                if((prereq instanceof Array))
+                                {
+                                    //iterate all prereq with conditional OR
+                                    for(var j = 0; j < prereq.length; j++)
+                                    {
+                                        if(!((outgoingEdgeGraphArray[prereq[j]]) instanceof Array))
+                                        {
+                                             outgoingEdgeGraphArray[prereq[j]] = new Array(); //create new array property
+                                        }
+                                        
+                                        outgoingEdgeGraphArray[prereq[j]].push(courseCode); //add element to array
+                                    }
+                                }
+                                
+                                else   
+                                {
+                                    if(!((outgoingEdgeGraphArray[prereq]) instanceof Array))
+                                    {
+                                        outgoingEdgeGraphArray[prereq] = new Array(); //create new array property
+                                    }
+                                    
+                                    outgoingEdgeGraphArray[prereq].push(courseCode); 
+                                }
+                            }
+                        } 
+                    }
+                }
+                
+                /*
+                 * Prints all outgoing edges.
+                 */
+                function printAllOutgoingEdges()
+                {
+                    for(var courseCode in courseArray)
+                    {
+                        var outgoingEdges = outgoingEdgeArray[courseCode];
+                        
+                        if(!(typeof outgoingEdges === 'undefined'))
+                        {
+                            for(var i = 0; i < outgoingEdges.length; i++)
+                            {
+                                alert(courseCode + " -> " + outgoingEdges[i]);     
+                            }  
+                        } 
+                    }
+                }
+                
                 
                 /*
                  * Changes the state of a node.
@@ -120,31 +192,41 @@
                 }
                 
                 /*
-                 *Get courses that requires the given course.
-                 *@return - array object containing node Ids 
+                 * Create the entire Course Dependency Graph.
+                 * @param
+                 *      currentParticleSystem - particle system to modify
                  */
-                function getCourseDependency(nodeId)
+                function createEntireCourseDependencyGraph(currentParticleSystem)
                 {
-                    dependencyCourseArray = new Array();
-                    
-                    //Iterate all courses
-                    for(key in courseArray)
+                    createAllNodesForDependencyGraph(currentParticleSystem); //create all nodes; each node start off as a singleton
+                    addDependencyEdges(currentParticleSystem); // adds the dependency edges 
+                }
+                            
+                /*
+                 * Create all the nodes for the Course Dependency Graph
+                 * @param
+                 *      currentParticleSystem - particle system to modify
+                 */
+                function createAllNodesForDependencyGraph(currentParticleSystem)
+                {
+                     //Iterate array to create nodes in Particle System
+                    for(var key in courseArray)
                     {
-                        var prereqCourseArray = courseArray[key]; //Get current course prerequisites
-                        
-
+                        var nodeId = key; //String Identifier of Node; Course code is used as the key
+                        var nodeData = {mass:1, label:nodeId, 'color':'grey', 'shape':'dot'}; //node data(key-value pair)
+                        currentParticleSystem.addNode(nodeId, nodeData); //add a node to the Particle System
                     }
-                    
-                    return dependencyCourseArray;
                 }
                 
                 /*
                  * Add dependency edges for the entire Graph.
+                 * @param
+                 *      currentParticleSystem - particle system to modify
                  */
-                function addDependencyEdges(courseArray)
+                function addDependencyEdges(currentParticleSystem)
                 {
                     //Iterate array to create dependency edges
-                    for(key in courseArray)
+                    for(var key in courseArray)
                     {
                         var currentNodeId = key; //String Identifier of target node
                         var currentCourseObject = courseArray[currentNodeId]; //Get Course Object
@@ -160,7 +242,7 @@
                                if(!(dependencyNodeId instanceof Array))
                                {
                                   //Add black directed edge (required course) from dependency node to current node
-                                  particleSystem.addEdge(dependencyNodeId, currentNodeId, {length:7, directed:true, 'color':'black'}); //addEdge(sourceNode,targetNode,edgeData)
+                                  currentParticleSystem.addEdge(dependencyNodeId, currentNodeId, {length:7, directed:true, 'color':'black'}); //addEdge(sourceNode,targetNode,edgeData)
                                }
 
                                else
@@ -171,7 +253,7 @@
                                        var dependencyNodeIdOR = dependencyNodeId[j];//String Identifier of source node
 
                                        //Add Gray directed edge from dependency node to current node
-                                       particleSystem.addEdge(dependencyNodeIdOR, currentNodeId, {length:7, directed:true}); //addEdge(sourceNode,targetNode,edgeData)
+                                       currentParticleSystem.addEdge(dependencyNodeIdOR, currentNodeId, {length:7, directed:true}); //addEdge(sourceNode,targetNode,edgeData)
                                    }
                                }
                            }
@@ -179,13 +261,31 @@
                     }   
                 }
                 
+                /*
+                 * Clears the entire Graph (Particle System) 
+                 * Removes all the nodes and edges.
+                 * @param
+                 *      currentParticleSystem - particle system to clear
+                 */
+                function clearEntireGraph(currentParticleSystem)
+                {
+                     //Iterate array
+                    for(var key in courseArray)
+                    {
+                        var currentNodeId = key; //String Identifier of current node
+                        currentParticleSystem.pruneNode(currentNodeId); //Removes the corresponding Node from the particle system (as well as any Edges in which it is a participant).
+                    }  
+                    
+                }
+                
                  /*
                  * Remove dependency edges for the entire Graph.
+                 * currentParticleSystem - particle system to modify
                  */
-                function removeDependencyEdges(courseArray)
+                function removeDependencyEdges(currentParticleSystem)
                 {
                     //Iterate array
-                    for(key in courseArray)
+                    for(var key in courseArray)
                     {
                         var currentNodeId = key; //String Identifier of current node
                         var currentNodeSourceEdgeArray = particleSystem.getEdgesFrom(currentNodeId); //Get edges in which the node is the source
@@ -194,7 +294,7 @@
                         for(var i = 0; i < currentNodeSourceEdgeArray.length; i++)
                         {
                             var edgeObj = currentNodeSourceEdgeArray[i];
-                            particleSystem.pruneEdge(edgeObj); //Removes edge from particle system
+                            currentParticleSystem.pruneEdge(edgeObj); //Removes edge from particle system
                         }
                     }   
                 }       
