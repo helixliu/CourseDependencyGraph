@@ -164,7 +164,7 @@
                 {
                     for(var courseCode in courseArray)
                     {
-                        var outgoingEdges = outgoingEdgeArray[courseCode];
+                        var outgoingEdges = outgoingEdgeGraphArray[courseCode];
                         
                         if(!(typeof outgoingEdges === 'undefined'))
                         {
