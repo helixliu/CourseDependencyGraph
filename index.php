@@ -42,15 +42,24 @@
                             $courseName = $courseObj['Name'];
                             echo "<input type=\"button\" value=\" $courseCode : $courseName\" id=\"$courseCode\" /><br />";
                         }
+                        
+                        //echo '<br />';
+                        //generateJSEventTriggers($jsonData);
+                        
+                        function generateJSEventTriggers($jsonData)
+                        {
+                            foreach($jsonData as $courseCode => $courseObj)
+                            {
+                                echo "document.getElementById('$courseCode').onclick = function(){changeNodeState('$courseCode')};<br />";
+                            }
+                        }
                     ?>
 
                 </form>
             </div>
         </div>
     
-        <script language="javascript" type="text/javascript">
-                            var json;
-                            
+        <script language="javascript" type="text/javascript">             
             $(document).ready(function()
             {
                 /* Parameters for the Particle System. 
@@ -133,9 +142,28 @@
                 //Trigger Event buttons
                 document.getElementById('displayEntireDependencyGraph').onclick = function(){createEntireCourseDependencyGraph()};
                 document.getElementById('clearGraph').onclick = function(){clearEntireGraph()};
-                document.getElementById('CS111').onclick = function(){changeNodeState("CS111")};
-                document.getElementById('CS112').onclick = function(){changeNodeState("CS112")};
-                
+                document.getElementById('MAT151').onclick = function(){changeNodeState('MAT151')};
+                document.getElementById('MAT152').onclick = function(){changeNodeState('MAT152')};
+                document.getElementById('MAT250').onclick = function(){changeNodeState('MAT250')};
+                document.getElementById('CS111').onclick = function(){changeNodeState('CS111')};
+                document.getElementById('CS112').onclick = function(){changeNodeState('CS112')};
+                document.getElementById('CS205').onclick = function(){changeNodeState('CS205')};
+                document.getElementById('CS206').onclick = function(){changeNodeState('CS206')};
+                document.getElementById('CS211').onclick = function(){changeNodeState('CS211')};
+                document.getElementById('CS214').onclick = function(){changeNodeState('CS214')};
+                document.getElementById('CS314').onclick = function(){changeNodeState('CS314')};
+                document.getElementById('CS323').onclick = function(){changeNodeState('CS323')};
+                document.getElementById('CS336').onclick = function(){changeNodeState('CS336')};
+                document.getElementById('CS344').onclick = function(){changeNodeState('CS344')};
+                document.getElementById('CS352').onclick = function(){changeNodeState('CS352')};
+                document.getElementById('CS415').onclick = function(){changeNodeState('CS415')};
+                document.getElementById('CS416').onclick = function(){changeNodeState('CS416')};
+                document.getElementById('CS417').onclick = function(){changeNodeState('CS417')};
+                document.getElementById('CS419').onclick = function(){changeNodeState('CS419')};
+                document.getElementById('CS428').onclick = function(){changeNodeState('CS428')};
+                document.getElementById('CS431').onclick = function(){changeNodeState('CS431')};
+                document.getElementById('CS440').onclick = function(){changeNodeState('CS440')};
+         
                 /*
                  * Changes the state of a node.
                  *      Green Node = completed course
