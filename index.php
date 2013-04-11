@@ -114,7 +114,7 @@
                     "CS440" : {"Name": "Introduction to Artificial Intelligence", "Prerequisite" : ["CS314"]}
                  };*/
                 
-                 var courseArray; //stores the json data from file
+                 var courseArray; //stores the json data from fil
                 
                 //url: path to json file
                 //async: function gets called, so var json is populated
