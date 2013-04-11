@@ -47,8 +47,10 @@
                 </form>
             </div>
         </div>
-      
+    
         <script language="javascript" type="text/javascript">
+                            var json;
+                            
             $(document).ready(function()
             {
                 /* Parameters for the Particle System. 
@@ -87,7 +89,7 @@
                  //Creation of an Associative Array 
                  //(<Key>:<Value>) Course Code : Course Data
                  //Incoming edges are provided. These are the prerequistes.
-                 var courseArray = 
+                 /*var courseArray = 
                  {
                     "MAT151" : {"Name": "Calculus I for Mathematical and Physical Sciences"},
                     "MAT152" : {"Name": "Calculus II for Mathematical and Physical Sciences", "Prerequisite" : ["MAT151"]},
@@ -110,8 +112,20 @@
                     "CS428" : {"Name": "Introduction to Computer Graphics", "Prerequisite" : ["CS112","MAT152","MAT250"]},
                     "CS431" : {"Name": "Software Engineering", "Prerequisite" : ["CS112",["CS314","CS336","CS352","CS416"]]},
                     "CS440" : {"Name": "Introduction to Artificial Intelligence", "Prerequisite" : ["CS314"]}
-                 };
-                 
+                 };*/
+                
+                 var courseArray; //stores the json data from file
+                
+                //url: path to json file
+                //async: function gets called, so var json is populated
+                $.ajax({
+                    url: 'json/computerscience.json',
+                    async: false,
+                    dataType: 'json',
+                    success: function (json) {courseArray=json;}
+                });
+                console.log(courseArray);
+                
                 var outgoingEdgeGraphArray = {}; //contain the outgoing edges of each node of the completed graph
                 determineAllOutgoingEdges(); //populates the outgoingEdgeGraphArray
                 initializeGraph(); //initialize the default state of the Graph; Add courses with no dependency
