@@ -132,6 +132,11 @@
                 var COMPLETED_STATE_COLOR = 'green';
                 var READY_STATE_COLOR = 'orange';
                 
+                var numToColorMapping = {};
+                numToColorMapping[UNAVALIABLE_STATE] =  UNAVALIABLE_STATE_COLOR;
+                numToColorMapping[COMPLETED_STATE] = COMPLETED_STATE_COLOR;
+                numToColorMapping[READY_STATE] = READY_STATE_COLOR;   
+                
                 //Data on the completed Course Dependency Graph and the course dependency graph that is being built.
                 var courseArray; //stores the json data from file of the completed course dependency graph
                 var outgoingEdgeGraphArray = {}; //{} = new Object(); contain the outgoing edges of each node of the completed graph
@@ -275,19 +280,21 @@
                 function determineNodeState(nodeId)
                 {
                     var currentNodeState = nodeStateArray[nodeId];
-                    //console.log("determineNodeState: " + nodeId + " = "  + currentNodeState);
+                    console.log("determineNodeState: " + nodeId + " = "  + currentNodeState);
 
                     //Case 1: Course is not in current graph or course cannot be taken yet 
                     if((typeof currentNodeState === 'undefined') || currentNodeState == 0)
                     {
                         //current node must be READY_STATEif prerequisites has been fulfilled
                         if(isCourseReadyToBeTaken(nodeId))
-                            return READY_STATE_COLOR;
+                            return READY_STATE;
                         
                         //current node must in UNAVALIABLE_STATE 
                         else
-                            return UNAVALIABLE_STATE_COLOR; 
+                            return UNAVALIABLE_STATE; 
                     } 
+                   
+                   return null;
                 }
                 
                 /*
@@ -313,12 +320,26 @@
                             //check if seen node exist in the Particle System
                             if(!doesNodeExist(seenNodeId))
                             {
-                                var color = determineNodeState(seenNodeId); //determine the state of the newly added Node
+                                var stateNum = determineNodeState(seenNodeId); //determine the state of the newly added Node
+                                var color = numToColorMapping[stateNum]; //get the corresponding color of state number
                                 //console.log(color);
-                         
+                                
+                                nodeStateArray[seenNodeId] = stateNum; //mark state of seen node  
                                 addNode(seenNodeId, color); //add seen node to graph
                             }
-                                 
+                            
+                             //TODO: case if a node is already seen, but new edges are being added which may make change the state of exiting nodes  
+                            else
+                            {
+                                 var stateNum = determineNodeState(seenNodeId);
+                                 if(stateNum != null)
+                                 {
+                                     var color = numToColorMapping[stateNum];
+                                     particleSystem.getNode(seenNodeId).data.color = color;
+                                 }    
+                            }
+                            
+                           
                             particleSystem.addEdge(nodeId, seenNodeId, edgeData); //attach directed edge from given node to new node that is seen
                         }  
                     }
