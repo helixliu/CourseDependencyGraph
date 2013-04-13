@@ -130,7 +130,7 @@
                 
                 var UNAVALIABLE_STATE_COLOR = 'grey';
                 var COMPLETED_STATE_COLOR = 'green';
-                var READY_STATE_COLOR = 'yellow';
+                var READY_STATE_COLOR = 'orange';
                 
                 //Data on the completed Course Dependency Graph and the course dependency graph that is being built.
                 var courseArray; //stores the json data from file of the completed course dependency graph
@@ -192,6 +192,7 @@
                  */
                 function changeNodeState(nodeId)
                 {
+                    printAllNodeState();
                     addNode(nodeId, COMPLETED_STATE_COLOR); //add Node to Particle System
                     nodeStateArray[nodeId] = COMPLETED_STATE; //mark course as taken
                     createNodeOutgoingEdges(nodeId); //add a node's outgoing edges
@@ -274,7 +275,7 @@
                 function determineNodeState(nodeId)
                 {
                     var currentNodeState = nodeStateArray[nodeId];
-                    console.log("determineNodeState: " + nodeId + " = "  + currentNodeState);
+                    //console.log("determineNodeState: " + nodeId + " = "  + currentNodeState);
 
                     //Case 1: Course is not in current graph or course cannot be taken yet 
                     if((typeof currentNodeState === 'undefined') || currentNodeState == 0)
@@ -313,8 +314,8 @@
                             if(!doesNodeExist(seenNodeId))
                             {
                                 var color = determineNodeState(seenNodeId); //determine the state of the newly added Node
-                                console.log(color);
-                                
+                                //console.log(color);
+                         
                                 addNode(seenNodeId, color); //add seen node to graph
                             }
                                  
@@ -347,7 +348,11 @@
                         var doesCourseHavePrereq = (typeof courseObj.Prerequisite === 'undefined')? false : true;
                         
                         if(!doesCourseHavePrereq)
-                            addNode(courseCode, 'grey');
+                        {
+                            addNode(courseCode, READY_STATE_COLOR); //add course that has no dependency to graph
+                            nodeStateArray[courseCode] = READY_STATE; //mark course as "Ready" state   
+                        }
+                            
                     }
                 }
                 
@@ -473,7 +478,8 @@
                  */
                 function clearEntireGraph()
                 {
-                     //reset node state array
+                    nodeStateArray = {};//initialize a new object
+                    
                      //Iterate array
                     for(var key in courseArray)
                     {
@@ -532,9 +538,20 @@
                         {
                             for(var i = 0; i < outgoingEdges.length; i++)
                             {
-                                //alert(courseCode + " -> " + outgoingEdges[i]);     
+                                console.log(courseCode + " -> " + outgoingEdges[i]);     
                             }  
                         } 
+                    }
+                }
+                
+                /*
+                 * Prints the current state of each node
+                 */
+                function printAllNodeState()
+                {
+                    for(key in nodeStateArray)
+                    {
+                         console.log(key + " => " + nodeStateArray[key]);   
                     }
                 }
         });
