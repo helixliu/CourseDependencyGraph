@@ -5,6 +5,8 @@ Course dependency graph of a single college major. Uses ArborJS to build and dis
 
 
 
+License
+=====================
 
 Copyright (C) 2013 rayedchan [ArborJS by samizdatco https://github.com/samizdatco/arbor]
 
