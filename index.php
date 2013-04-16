@@ -27,11 +27,12 @@
                     <input type="button" value="Clear Graph" id="clearGraph" /><br /><br />
                     
                     <label><b>Courses</b></label><br />
+                    <div id="courseButtons"></div>
                     <!--<input type="button" value="CS111: Introduction to Computer Science" id="CS111" /><br />
                     <input type="button" value="CS112: Data Structures" id="CS112" /><br />-->
       
                     <?php
-                        $jsonFileName = "json/computerscience.json";
+                        /*$jsonFileName = "json/computerscience.json";
                         $jsonFileContent = file_get_contents($jsonFileName); //get content of file
                         $jsonData = json_decode($jsonFileContent, true); //converts content in json; return an array
                         //print_r($jsonData); //prints the entire array
@@ -52,7 +53,7 @@
                             {
                                 echo "document.getElementById('$courseCode').onclick = function(){changeNodeState('$courseCode')};<br />";
                             }
-                        }
+                        }*/
                     ?>
 
                 </form>
@@ -122,16 +123,19 @@
                     "CS431" : {"Name": "Software Engineering", "Prerequisite" : ["CS112",["CS314","CS336","CS352","CS416"]]},
                     "CS440" : {"Name": "Introduction to Artificial Intelligence", "Prerequisite" : ["CS314"]}
                  };*/
+                //Characteristics of Node and Edges
+                var LOGICAL_AND_EDGE_COLOR = 'black';
+                var LOGICAL_OR_EDGE_COLOR = 'yellow';
+                var NODE_SHAPE = 'dot';
                 
                 //Possible states of a node
                 var UNAVALIABLE_STATE = 0; //Grey Node or Non-Existent Node
                 var COMPLETED_STATE = 1; //Green Node
-                var READY_STATE = 2; //Yellow Node
-                
+                var READY_STATE = 2; //Orange Node
                 var UNAVALIABLE_STATE_COLOR = 'grey';
                 var COMPLETED_STATE_COLOR = 'green';
                 var READY_STATE_COLOR = 'orange';
-                
+                               
                 var numToColorMapping = {};
                 numToColorMapping[UNAVALIABLE_STATE] =  UNAVALIABLE_STATE_COLOR;
                 numToColorMapping[COMPLETED_STATE] = COMPLETED_STATE_COLOR;
@@ -157,7 +161,7 @@
                 //TODO: need to find a way to dynamically generate in JS
                 document.getElementById('displayEntireDependencyGraph').onclick = function(){createEntireCourseDependencyGraph()};
                 document.getElementById('clearGraph').onclick = function(){clearEntireGraph()};
-                document.getElementById('MAT151').onclick = function(){changeNodeState('MAT151')};
+                /*document.getElementById('MAT151').onclick = function(){changeNodeState('MAT151')};
                 document.getElementById('MAT152').onclick = function(){changeNodeState('MAT152')};
                 document.getElementById('MAT250').onclick = function(){changeNodeState('MAT250')};
                 document.getElementById('CS111').onclick = function(){changeNodeState('CS111')};
@@ -177,7 +181,20 @@
                 document.getElementById('CS419').onclick = function(){changeNodeState('CS419')};
                 document.getElementById('CS428').onclick = function(){changeNodeState('CS428')};
                 document.getElementById('CS431').onclick = function(){changeNodeState('CS431')};
-                document.getElementById('CS440').onclick = function(){changeNodeState('CS440')};
+                document.getElementById('CS440').onclick = function(){changeNodeState('CS440')};*/
+                
+                //Generate Trigger event buttons
+                for(courseCode in courseArray) 
+                {
+                    var btnShow = document.createElement("input"); //create input element
+                    btnShow.setAttribute("type", "button"); //set attribute for input element
+                    btnShow.value = courseCode +": " + courseArray[courseCode].Name; //set name value for element
+                    btnShow.onclick = (function(courseCode){
+                    return function(){changeNodeState(courseCode);};
+                    })(courseCode); //attach custom onclick function to button
+                   
+                    document.getElementById('courseButtons').appendChild(btnShow); //add elemement to div[id=courseButtons] tag
+                }
          
                 /*
                  * Changes the state of a node.
@@ -298,6 +315,36 @@
                 }
                 
                 /*
+                 * Determines the color of an edge. Only two edge types exist for this Graph:
+                 * Logical AND
+                 * Logical OR
+                 * This method assumes that source node is a prequisite course
+                 * to the target Node.
+                 * 
+                 * @param -
+                 *      srcNodeId -  its outgoing edge color is to be determined.
+                 *      targetNodeId - edge is directed [pointing] to the target node
+                 *      
+                 * @return - color of the edge
+                 */
+                function determineEdgeColor(srcNodeId, targetNodeId)
+                {
+                    var targetNodePreq = courseArray[targetNodeId].Prerequisite;
+                    
+                    //iterate the target node's prequisites
+                    for(var i = 0; i < targetNodePreq.length; i++)
+                    {
+                        //targetNodePreq[i] can be an element or an array object
+                        if(targetNodePreq[i] == srcNodeId)
+                            return LOGICAL_AND_EDGE_COLOR;
+                    }
+                    
+                    //based on the assumptions that the target node and the source node has
+                    //a relationship, it not necessary to iterate through the nested prequiaites
+                    return LOGICAL_OR_EDGE_COLOR;
+                }
+                
+                /*
                  * Create a given node's outgoing edges.
                  * These new edges may allow unseen nodes to become 
                  * avaiable on the graph; New nodes may be created.
@@ -314,7 +361,8 @@
                         for(var i = 0; i < curNodeOutgoingEdges.length; i++)
                         {
                             var seenNodeId =  curNodeOutgoingEdges[i];
-                            var edgeData = {length:7, directed:true, 'color':'black'};
+                            var edgeColor = determineEdgeColor(nodeId, seenNodeId);
+                            var edgeData = {length:7, directed:true, 'color': edgeColor};
                             //console.log(seenNodeId);
                             
                             //check if seen node exist in the Particle System
@@ -328,7 +376,7 @@
                                 addNode(seenNodeId, color); //add seen node to graph
                             }
                             
-                             //TODO: case if a node is already seen, but new edges are being added which may make change the state of exiting nodes  
+                            //case: node is already seen, but new edges are being added which may change the state of exiting target nodes  
                             else
                             {
                                  var stateNum = determineNodeState(seenNodeId);
@@ -353,7 +401,7 @@
                  */
                 function addNode(nodeId, nodeColor)
                 {
-                     var nodeData = {mass:1, label:nodeId, 'color': nodeColor, 'shape':'dot'}; //node data(key-value pair)
+                     var nodeData = {mass:1, label:nodeId, 'color': nodeColor, 'shape': NODE_SHAPE}; //node data(key-value pair)
                      particleSystem.addNode(nodeId, nodeData); //add a node to the Particle System
                 }
                 
@@ -446,7 +494,7 @@
                     for(var key in courseArray)
                     {
                         var nodeId = key; //String Identifier of Node; Course code is used as the key
-                        var nodeData = {mass:1, label:nodeId, 'color':'grey', 'shape':'dot'}; //node data(key-value pair)
+                        var nodeData = {mass:1, label:nodeId, 'color': UNAVALIABLE_STATE_COLOR, 'shape': NODE_SHAPE}; //node data(key-value pair)
                         particleSystem.addNode(nodeId, nodeData); //add a node to the Particle System
                     }
                 }
@@ -494,8 +542,8 @@
                 }
                 
                 /*
-                 * Clears the entire Graph (Particle System) 
-                 * Removes all the nodes and edges.
+                 * Reset Graph (Particle System) to its default state.
+                 * Removes all the nodes and edges. Adds the root nodes.
                  */
                 function clearEntireGraph()
                 {
@@ -509,7 +557,9 @@
                         //determine if node exist in Particle system
                         if(doesNodeExist(currentNodeId))
                             particleSystem.pruneNode(currentNodeId); //Removes the corresponding Node from the particle system (as well as any Edges in which it is a participant).
-                    }  
+                    } 
+                    
+                    initializeGraph(); //initial state
                     
                 }
                 
