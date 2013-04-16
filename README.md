@@ -5,7 +5,7 @@ Course dependency graph of an academic major. This project uses ArborJS to build
 
 
 
-License
+The MIT License (MIT)
 =====================
 
 Copyright (C) 2013 rayedchan 
