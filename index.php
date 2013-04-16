@@ -9,11 +9,38 @@
         <script language="javascript" type="text/javascript" src="js/renderer.js"></script>
         <script language="javascript" type="text/javascript" src="js/graphics.js"></script>
         <style type="text/css">
+            /*Particle System Canvas*/
             #viewport
             {
                 display:inline;
                 float: left;
             }
+            
+            /*Appearance of input button*/
+            #courses input
+            {
+                border: 1px solid #777777;
+                background: #585858;
+                color: white;
+                font: bold 11px 'Trebuchet MS';
+                padding: 1px;
+                cursor: pointer;
+                -moz-border-radius: 4px;
+                -webkit-border-radius: 4px; 
+            }
+            
+            #courses input:hover
+            {
+                border: 1px solid #777777;
+                background: #6e9e2d;
+                color: white;
+                font: bold 11px 'Trebuchet MS';
+                padding: 1px;
+                cursor: pointer;
+                -moz-border-radius: 4px;
+                -webkit-border-radius: 4px; 
+            }
+
         </style>
     </head>
     
@@ -25,37 +52,8 @@
                 <form id="courses"> 
                     <input type="button" value="Display Entire Course Dependency Graph" id="displayEntireDependencyGraph" /><br />
                     <input type="button" value="Clear Graph" id="clearGraph" /><br /><br />
-                    
                     <label><b>Courses</b></label><br />
-                    <div id="courseButtons"></div>
-                    <!--<input type="button" value="CS111: Introduction to Computer Science" id="CS111" /><br />
-                    <input type="button" value="CS112: Data Structures" id="CS112" /><br />-->
-      
-                    <?php
-                        /*$jsonFileName = "json/computerscience.json";
-                        $jsonFileContent = file_get_contents($jsonFileName); //get content of file
-                        $jsonData = json_decode($jsonFileContent, true); //converts content in json; return an array
-                        //print_r($jsonData); //prints the entire array
-                        
-                        //iterate through array with key => value
-                        foreach($jsonData as $courseCode => $courseObj)
-                        {
-                            $courseName = $courseObj['Name'];
-                            echo "<input type=\"button\" value=\" $courseCode : $courseName\" id=\"$courseCode\" /><br />";
-                        }
-                        
-                        //echo '<br />';
-                        //generateJSEventTriggers($jsonData);
-                        
-                        function generateJSEventTriggers($jsonData)
-                        {
-                            foreach($jsonData as $courseCode => $courseObj)
-                            {
-                                echo "document.getElementById('$courseCode').onclick = function(){changeNodeState('$courseCode')};<br />";
-                            }
-                        }*/
-                    ?>
-
+                    <div id="courseButtons"></div>     
                 </form>
             </div>
         </div>
@@ -94,38 +92,11 @@
                     precision:precisionValue
                     }); 
                 
-                 particleSystem.renderer = Renderer("#viewport"); //Initializes and redraws Particle system
-                 
-                 //Creation of an Associative Array 
-                 //(<Key>:<Value>) Course Code : Course Data
-                 //Incoming edges are provided. These are the prerequistes.
-                 /*var courseArray = 
-                 {
-                    "MAT151" : {"Name": "Calculus I for Mathematical and Physical Sciences"},
-                    "MAT152" : {"Name": "Calculus II for Mathematical and Physical Sciences", "Prerequisite" : ["MAT151"]},
-                    "MAT250" : {"Name": "Introductory Linear Algebra", "Prerequisite" : ["MAT152"]},
-                    "CS111" : {"Name": "Introduction to Computer Science"},
-                    "CS112" : {"Name": "Data Structures", "Prerequisite" : ["MAT151","CS111"]},
-                    "CS205" : {"Name": "Introduction to Discrete Structures I", "Prerequisite" : ["CS111","MAT152"]},
-                    "CS206" : {"Name": "Introduction to Discrete Structures II", "Prerequisite" : ["CS205"]},
-                    "CS211" : {"Name": "Computer Architecture", "Prerequisite" : ["CS112"]},
-                    "CS214" : {"Name": "Systems Programming", "Prerequisite" : ["CS211"]},
-                    "CS314" : {"Name": "Principles of Programming Languages", "Prerequisite" : ["CS112","CS205"]},
-                    "CS323" : {"Name": "Numerical Analysis and Computing", "Prerequisite" : ["MAT152","MAT250"]},
-                    "CS336" : {"Name": "Principles of Information and Data Management", "Prerequisite" : ["CS112"]},
-                    "CS344" : {"Name": "Design and Analysis of Computer Algorithms", "Prerequisite" : ["CS112", "CS206"]},
-                    "CS352" : {"Name": "Internet Technology", "Prerequisite" : ["CS211","CS206"]},
-                    "CS415" : {"Name": "Compilers", "Prerequisite" : ["CS211","CS314"]},
-                    "CS416" : {"Name": "Operating Systems Design", "Prerequisite" : ["CS211","CS214"]},
-                    "CS417" : {"Name": "Distributed Systems: Concepts and Design", "Prerequisite" : ["CS416"]},
-                    "CS419" : {"Name": "Computer Security", "Prerequisite" : ["CS112",["CS416","CS352"]]},
-                    "CS428" : {"Name": "Introduction to Computer Graphics", "Prerequisite" : ["CS112","MAT152","MAT250"]},
-                    "CS431" : {"Name": "Software Engineering", "Prerequisite" : ["CS112",["CS314","CS336","CS352","CS416"]]},
-                    "CS440" : {"Name": "Introduction to Artificial Intelligence", "Prerequisite" : ["CS314"]}
-                 };*/
+                particleSystem.renderer = Renderer("#viewport"); //Initializes and redraws Particle system
+                
                 //Characteristics of Node and Edges
                 var LOGICAL_AND_EDGE_COLOR = 'black';
-                var LOGICAL_OR_EDGE_COLOR = 'yellow';
+                var LOGICAL_OR_EDGE_COLOR = 'orange';
                 var NODE_SHAPE = 'dot';
                 
                 //Possible states of a node
@@ -134,7 +105,7 @@
                 var READY_STATE = 2; //Orange Node
                 var UNAVALIABLE_STATE_COLOR = 'grey';
                 var COMPLETED_STATE_COLOR = 'green';
-                var READY_STATE_COLOR = 'orange';
+                var READY_STATE_COLOR = 'blue';
                                
                 var numToColorMapping = {};
                 numToColorMapping[UNAVALIABLE_STATE] =  UNAVALIABLE_STATE_COLOR;
@@ -142,6 +113,9 @@
                 numToColorMapping[READY_STATE] = READY_STATE_COLOR;   
                 
                 //Data on the completed Course Dependency Graph and the course dependency graph that is being built.
+                //Associative Array <Key>:<Value> [Course Code : Course Data] 
+                //E.g "CS431" : {"Name": "Software Engineering", "Prerequisite" : ["CS112",["CS314","CS336","CS352","CS416"]]} 
+                //Incoming edges are provided. These are the prerequistes
                 var courseArray; //stores the json data from file of the completed course dependency graph
                 var outgoingEdgeGraphArray = {}; //{} = new Object(); contain the outgoing edges of each node of the completed graph
                 var nodeStateArray = {}; //keeps track of the current state of each node in the graph that is being bulit
@@ -152,41 +126,20 @@
                     dataType: 'json', //json data 
                     success: function (json) {courseArray=json;} //sets courseArray with json data
                 });
-                //console.log(courseArray);
                
                 determineAllOutgoingEdges(); //populates the outgoingEdgeGraphArray
                 initializeGraph(); //initialize the default state of the Graph; Add courses with no dependency
                 
-                //Trigger Event buttons (Generated by PHP script)
-                //TODO: need to find a way to dynamically generate in JS
+                //Trigger Event buttons
                 document.getElementById('displayEntireDependencyGraph').onclick = function(){createEntireCourseDependencyGraph()};
                 document.getElementById('clearGraph').onclick = function(){clearEntireGraph()};
-                /*document.getElementById('MAT151').onclick = function(){changeNodeState('MAT151')};
-                document.getElementById('MAT152').onclick = function(){changeNodeState('MAT152')};
-                document.getElementById('MAT250').onclick = function(){changeNodeState('MAT250')};
-                document.getElementById('CS111').onclick = function(){changeNodeState('CS111')};
-                document.getElementById('CS112').onclick = function(){changeNodeState('CS112')};
-                document.getElementById('CS205').onclick = function(){changeNodeState('CS205')};
-                document.getElementById('CS206').onclick = function(){changeNodeState('CS206')};
-                document.getElementById('CS211').onclick = function(){changeNodeState('CS211')};
-                document.getElementById('CS214').onclick = function(){changeNodeState('CS214')};
-                document.getElementById('CS314').onclick = function(){changeNodeState('CS314')};
-                document.getElementById('CS323').onclick = function(){changeNodeState('CS323')};
-                document.getElementById('CS336').onclick = function(){changeNodeState('CS336')};
-                document.getElementById('CS344').onclick = function(){changeNodeState('CS344')};
-                document.getElementById('CS352').onclick = function(){changeNodeState('CS352')};
-                document.getElementById('CS415').onclick = function(){changeNodeState('CS415')};
-                document.getElementById('CS416').onclick = function(){changeNodeState('CS416')};
-                document.getElementById('CS417').onclick = function(){changeNodeState('CS417')};
-                document.getElementById('CS419').onclick = function(){changeNodeState('CS419')};
-                document.getElementById('CS428').onclick = function(){changeNodeState('CS428')};
-                document.getElementById('CS431').onclick = function(){changeNodeState('CS431')};
-                document.getElementById('CS440').onclick = function(){changeNodeState('CS440')};*/
                 
-                //Generate Trigger event buttons
+                //Dynamically generate trigger event buttons for courses
+                //E.g. document.getElementById('MAT151').onclick = function(){changeNodeState('MAT151')};
                 for(courseCode in courseArray) 
                 {
                     var btnShow = document.createElement("input"); //create input element
+                    var br = document.createElement("br"); //create break line element
                     btnShow.setAttribute("type", "button"); //set attribute for input element
                     btnShow.value = courseCode +": " + courseArray[courseCode].Name; //set name value for element
                     btnShow.onclick = (function(courseCode){
@@ -194,6 +147,7 @@
                     })(courseCode); //attach custom onclick function to button
                    
                     document.getElementById('courseButtons').appendChild(btnShow); //add elemement to div[id=courseButtons] tag
+                    document.getElementById('courseButtons').appendChild(br);
                 }
          
                 /*
