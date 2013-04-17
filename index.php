@@ -40,6 +40,15 @@
                 -moz-border-radius: 4px;
                 -webkit-border-radius: 4px; 
             }
+            
+            /*Appearance of input button*/
+            .prerequisites
+            {
+                display:inline;
+                font: italic 11px 'Trebuchet MS';
+                color: orangered;
+
+            }
 
         </style>
     </head>
@@ -139,14 +148,75 @@
                 for(courseCode in courseArray) 
                 {
                     var btnShow = document.createElement("input"); //create input element
+                    var span = document.createElement("span"); //create span element to display course prerequisites
                     var br = document.createElement("br"); //create break line element
+                    var divSpan = document.createElement("div"); //container for span
+                    
+                    divSpan.setAttribute("class", "prerequisites"); //set class for div element
                     btnShow.setAttribute("type", "button"); //set attribute for input element
                     btnShow.value = courseCode +": " + courseArray[courseCode].Name; //set name value for element
                     btnShow.onclick = (function(courseCode){
                     return function(){changeNodeState(courseCode);};
                     })(courseCode); //attach custom onclick function to button
                    
+                    
+                    var prerequisiteObj = courseArray[courseCode].Prerequisite;
+                    var prerequisiteString = "";
+                    
+                    //Generate the Prequisite string for a course 
+                    if(!(typeof prerequisiteObj === 'undefined'))
+                    {
+                        prerequisiteString = "Prerequisite: ";
+                        for(var i = 0; i < prerequisiteObj.length; i++)
+                        {
+                             var preqAndOrObj = prerequisiteObj[i];
+                             
+                             //Always dealing with two or more "OR elements"
+                             if(preqAndOrObj instanceof Array)
+                             {
+                                 var preqOrObjLength = preqAndOrObj.length;
+                                 var lastOrElementIndex = preqOrObjLength - 1;
+                                 
+                                 //Case: OR group is not first element 
+                                 if(i != 0)
+                                     prerequisiteString = prerequisiteString + " and "
+                                 
+                                 for(var j = 0; j < preqOrObjLength; j++)
+                                 {
+                                     var preqOrElement = preqAndOrObj[j];
+                                     
+                                     //Case 1: OR first element
+                                     if(j == 0)
+                                         prerequisiteString = prerequisiteString + " [ " + preqOrElement;
+                                     
+                                     //Case 2: OR last element
+                                     else if (j == lastOrElementIndex)
+                                         prerequisiteString = prerequisiteString + " or " + preqOrElement + " ]";
+                                     
+                                     //Case 3: Middle elements
+                                     else
+                                         prerequisiteString = prerequisiteString + " or " + preqOrElement;
+                                 } 
+                             }
+                             
+                             else
+                             {
+                                 //Case 1: first element
+                                 if(i == 0)
+                                     prerequisiteString = prerequisiteString + " " + preqAndOrObj;
+                                 
+                                 //Case 2: append "and [course code]" to prereq string
+                                 else
+                                     prerequisiteString = prerequisiteString + " and " + preqAndOrObj;
+                             }
+
+                        }
+                    }
+                    
+                    span.innerHTML = prerequisiteString;
+                    divSpan.appendChild(span)
                     document.getElementById('courseButtons').appendChild(btnShow); //add elemement to div[id=courseButtons] tag
+                    document.getElementById('courseButtons').appendChild(divSpan);
                     document.getElementById('courseButtons').appendChild(br);
                 }
          
@@ -168,7 +238,7 @@
                  */
                 function changeNodeState(nodeId)
                 {
-                    printAllNodeState();
+                    //printAllNodeState();
                     addNode(nodeId, COMPLETED_STATE_COLOR); //add Node to Particle System
                     nodeStateArray[nodeId] = COMPLETED_STATE; //mark course as taken
                     createNodeOutgoingEdges(nodeId); //add a node's outgoing edges
@@ -251,7 +321,7 @@
                 function determineNodeState(nodeId)
                 {
                     var currentNodeState = nodeStateArray[nodeId];
-                    console.log("determineNodeState: " + nodeId + " = "  + currentNodeState);
+                    //console.log("determineNodeState: " + nodeId + " = "  + currentNodeState);
 
                     //Case 1: Course is not in current graph or course cannot be taken yet 
                     if((typeof currentNodeState === 'undefined') || currentNodeState == 0)
