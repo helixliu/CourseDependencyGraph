@@ -130,7 +130,7 @@
                 var nodeStateArray = {}; //keeps track of the current state of each node in the graph that is being bulit
 
                 $.ajax({
-                    url: 'json/computerscience.json', //url: path to json file
+                    url: 'json/mathematics.json', //url: path to json file
                     async: false,  //async: function gets called in sequence with code, so var courseArray is populated
                     dataType: 'json', //json data 
                     success: function (json) {courseArray=json;} //sets courseArray with json data
