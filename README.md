@@ -6,6 +6,7 @@ Course dependency graph of an academic major. This project uses ArborJS to build
 Bugs
 =====================
 -Single node in Particle System crashes code (ArborJS)
+
 -Does not work for IE9 (ArborJS)
 
 
