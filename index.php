@@ -49,7 +49,24 @@
                 color: orangered;
 
             }
-
+            
+            /*Side Panel Navigation Menu*/
+            #sidePanelNav
+            {
+                display: inline;
+                background: url(img/bar.gif) center center repeat-x;
+                
+            }
+            
+            #sidePanelNav a
+            {
+                color: black;
+                text-decoration: none;
+                font: bolder 12px 'Trebuchet MS';
+            }
+       
+       
+       
         </style>
     </head>
     
@@ -57,10 +74,15 @@
         <div id="container">
             <canvas id="viewport" width="800" height="600"></canvas>
 
-            <div id="sidePanel">
+           <div id="sidePanel">
+                 <div id="sidePanelNav">
+                        <a id="clearGraph" href="#">Reset Graph</a> <b>|</b>
+                        <a id="displayEntireDependencyGraph" href="#">Display Course Dependency Graph</a> <b>|</b>
+                        <a href="">Examples</a>
+                 </div>
+
+        
                 <form id="courses"> 
-                    <input type="button" value="Display Entire Course Dependency Graph" id="displayEntireDependencyGraph" /><br />
-                    <input type="button" value="Clear Graph" id="clearGraph" /><br /><br />
                     <label><b>Courses</b></label><br />
                     <div id="courseButtons"></div>     
                 </form>
