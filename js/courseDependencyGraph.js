@@ -15,142 +15,183 @@ var READY_STATE_COLOR = 'blue';
 var numToColorMapping = {};
 numToColorMapping[UNAVALIABLE_STATE] =  UNAVALIABLE_STATE_COLOR;
 numToColorMapping[COMPLETED_STATE] = COMPLETED_STATE_COLOR;
-numToColorMapping[READY_STATE] = READY_STATE_COLOR;  
+numToColorMapping[READY_STATE] = READY_STATE_COLOR;
 
+var COMPUTER_SCIENCE_JSON_FILE = 'json/computerscience.json';
+var MATHEMATICS_JSON_FILE = 'json/mathematics.json';
+
+/*
+ * Execute code when DOM is fully loaded.
+ * Main method
+ */
 $(document).ready(function()
 {
-    /* Parameters for the Particle System. 
-     * The Particle System is used to represent the course dependency graph.
-     * Below the parameters of the Particle System constructor.
-     *      repulsion - the force repelling nodes from each other
-     *      stiffness - the rigidity of the edges
-     *      friction - the amount of damping in the system
-     *      gravity - an addtional force attracting nodes to the orgin
-     *      fps - frames per second
-     *      dt - timestep to use for steeping the simulation
-     *      precision - accuracy vs. speed in force calculations
-     */
-    var repulsionValue = 2000;
-    var stiffnessValue = 600;
-    var frictionValue = .5;
-    var gravityValue = true;
-    var fpsValue = 55;
-    var dtValue = 0.02;
-    var precisionValue = 0.6;
-
-    //call constructor to create the Particle System
-    //The user will be able to interact and modify this particle system.
-    var particleSystem = arbor.ParticleSystem(
-        {repulsion:repulsionValue, 
-        stiffness:stiffnessValue,
-        friction:frictionValue,
-        gravity:gravityValue,
-        fps:fpsValue, 
-        dt:dtValue,
-        precision:precisionValue
-        }); 
-
-    particleSystem.renderer = Renderer("#viewport"); //Initializes and redraws Particle system
+    $.builtSystem(COMPUTER_SCIENCE_JSON_FILE);
     
-    //Data on the completed Course Dependency Graph and the course dependency graph that is being built.
-    //Associative Array <Key>:<Value> [Course Code : Course Data] 
-    //E.g "CS431" : {"Name": "Software Engineering", "Prerequisite" : ["CS112",["CS314","CS336","CS352","CS416"]]} 
-    //Incoming edges are provided. These are the prerequistes
-    var courseArray; //stores the json data from file of the completed course dependency graph
-    var outgoingEdgeGraphArray = {}; //{} = new Object(); contain the outgoing edges of each node of the completed graph
-    var nodeStateArray = {}; //keeps track of the current state of each node in the graph that is being bulit
-    var jsonFile = 'json/computerscience.json'; //path to json file
-
-    $.ajax({
-        url: jsonFile , //url: path to json file
-        async: false,  //async: function gets called in sequence with code, so var courseArray is populated
-        dataType: 'json', //json data 
-        success: function (json) {courseArray=json;} //sets courseArray with json data
-    });
-
-    $.determineAllOutgoingEdges(courseArray, outgoingEdgeGraphArray); //populates the outgoingEdgeGraphArray
-    $.initializeGraph(particleSystem, courseArray, nodeStateArray); //initialize the default state of the Graph; Add courses with no dependency
-
-    //Trigger Event buttons
-    document.getElementById('displayEntireDependencyGraph').onclick = function(){$.createEntireCourseDependencyGraph(particleSystem, courseArray, nodeStateArray)};
-    document.getElementById('clearGraph').onclick = function(){$.clearEntireGraph(particleSystem, courseArray, nodeStateArray)};
-
-    //Dynamically generate trigger event buttons for courses
-    //E.g. document.getElementById('MAT151').onclick = function(){changeNodeState('MAT151')};
-    for(courseCode in courseArray) 
+    /*$('#academicMajor').change(function()
     {
-        var btnShow = document.createElement("input"); //create input element
-        var span = document.createElement("span"); //create span element to display course prerequisites
-        var br = document.createElement("br"); //create break line element
-        var divSpan = document.createElement("div"); //container for span
+        $.builtSystem($(this).val());
+    });*/
+});
 
-        divSpan.setAttribute("class", "prerequisites"); //set class for div element
-        btnShow.setAttribute("type", "button"); //set attribute for input element
-        btnShow.value = courseCode +": " + courseArray[courseCode].Name; //set name value for element
-        btnShow.onclick = (function(courseCode){
-        return function(){$.changeNodeState(particleSystem, courseArray, outgoingEdgeGraphArray, nodeStateArray, courseCode)};
-        })(courseCode); //attach custom onclick function to button
+/*
+* Dynamically renders the content of the page.
+* @param -
+*       jsonFile - path of json file. This json file contains data of a single academic major.
+*/
+(function($)
+{
+    $.builtSystem = function(jsonFile)
+    {
+        var particleSystem = $.initializeParticleSystem();
+        particleSystem.renderer = Renderer("#viewport"); //Initializes and redraws Particle system
 
-        var prerequisiteObj = courseArray[courseCode].Prerequisite;
-        var prerequisiteString = "";
+        //Data on the completed Course Dependency Graph and the course dependency graph that is being built.
+        //Associative Array <Key>:<Value> [Course Code : Course Data] 
+        //E.g "CS431" : {"Name": "Software Engineering", "Prerequisite" : ["CS112",["CS314","CS336","CS352","CS416"]]} 
+        //Incoming edges are provided. These are the prerequistes
+        var courseArray; //stores the json data from file of the completed course dependency graph
+        var outgoingEdgeGraphArray = {}; //{} = new Object(); contain the outgoing edges of each node of the completed graph
+        var nodeStateArray = {}; //keeps track of the current state of each node in the graph that is being bulit
 
-        //Generate the Prequisite string for a course 
-        if(!(typeof prerequisiteObj === 'undefined'))
+        $.ajax({
+            url: jsonFile , //url: path to json file
+            async: false,  //async: function gets called in sequence with code, so var courseArray is populated
+            dataType: 'json', //json data 
+            success: function (json) {courseArray=json;} //sets courseArray with json data
+        });
+
+        $.determineAllOutgoingEdges(courseArray, outgoingEdgeGraphArray); //populates the outgoingEdgeGraphArray
+        $.initializeGraph(particleSystem, courseArray, nodeStateArray); //initialize the default state of the Graph; Add courses with no dependency
+
+        //Trigger Event buttons
+        document.getElementById('displayEntireDependencyGraph').onclick = function(){$.createEntireCourseDependencyGraph(particleSystem, courseArray, nodeStateArray)};
+        document.getElementById('clearGraph').onclick = function(){$.clearEntireGraph(particleSystem, courseArray, nodeStateArray)};
+
+        //Dynamically generate trigger event buttons for courses
+        //E.g. document.getElementById('MAT151').onclick = function(){changeNodeState('MAT151')};
+        for(courseCode in courseArray) 
         {
-            prerequisiteString = "Prerequisite: ";
-            for(var i = 0; i < prerequisiteObj.length; i++)
+            var btnShow = document.createElement("input"); //create input element
+            var span = document.createElement("span"); //create span element to display course prerequisites
+            var br = document.createElement("br"); //create break line element
+            var divSpan = document.createElement("div"); //container for span
+
+            divSpan.setAttribute("class", "prerequisites"); //set class for div element
+            btnShow.setAttribute("type", "button"); //set attribute for input element
+            btnShow.value = courseCode +": " + courseArray[courseCode].Name; //set name value for element
+            btnShow.onclick = (function(courseCode){
+            return function(){$.changeNodeState(particleSystem, courseArray, outgoingEdgeGraphArray, nodeStateArray, courseCode)};
+            })(courseCode); //attach custom onclick function to button
+
+            var prerequisiteObj = courseArray[courseCode].Prerequisite;
+            var prerequisiteString = "";
+
+            //Generate the Prequisite string for a course 
+            if(!(typeof prerequisiteObj === 'undefined'))
             {
-                 var preqAndOrObj = prerequisiteObj[i];
+                prerequisiteString = "Prerequisite: ";
+                for(var i = 0; i < prerequisiteObj.length; i++)
+                {
+                     var preqAndOrObj = prerequisiteObj[i];
 
-                 //Always dealing with two or more "OR elements"
-                 if(preqAndOrObj instanceof Array)
-                 {
-                     var preqOrObjLength = preqAndOrObj.length;
-                     var lastOrElementIndex = preqOrObjLength - 1;
-
-                     //Case: OR group is not first element 
-                     if(i != 0)
-                         prerequisiteString = prerequisiteString + " and "
-
-                     for(var j = 0; j < preqOrObjLength; j++)
+                     //Always dealing with two or more "OR elements"
+                     if(preqAndOrObj instanceof Array)
                      {
-                         var preqOrElement = preqAndOrObj[j];
+                         var preqOrObjLength = preqAndOrObj.length;
+                         var lastOrElementIndex = preqOrObjLength - 1;
 
-                         //Case 1: OR first element
-                         if(j == 0)
-                             prerequisiteString = prerequisiteString + " [ " + preqOrElement;
+                         //Case: OR group is not first element 
+                         if(i != 0)
+                             prerequisiteString = prerequisiteString + " and "
 
-                         //Case 2: OR last element
-                         else if (j == lastOrElementIndex)
-                             prerequisiteString = prerequisiteString + " or " + preqOrElement + " ]";
+                         for(var j = 0; j < preqOrObjLength; j++)
+                         {
+                             var preqOrElement = preqAndOrObj[j];
 
-                         //Case 3: Middle elements
-                         else
-                             prerequisiteString = prerequisiteString + " or " + preqOrElement;
-                     } 
-                 }
+                             //Case 1: OR first element
+                             if(j == 0)
+                                 prerequisiteString = prerequisiteString + " [ " + preqOrElement;
 
-                 else
-                 {
-                     //Case 1: first element
-                     if(i == 0)
-                         prerequisiteString = prerequisiteString + " " + preqAndOrObj;
+                             //Case 2: OR last element
+                             else if (j == lastOrElementIndex)
+                                 prerequisiteString = prerequisiteString + " or " + preqOrElement + " ]";
 
-                     //Case 2: append "and [course code]" to prereq string
+                             //Case 3: Middle elements
+                             else
+                                 prerequisiteString = prerequisiteString + " or " + preqOrElement;
+                         } 
+                     }
+
                      else
-                         prerequisiteString = prerequisiteString + " and " + preqAndOrObj;
-                 }
+                     {
+                         //Case 1: first element
+                         if(i == 0)
+                             prerequisiteString = prerequisiteString + " " + preqAndOrObj;
 
+                         //Case 2: append "and [course code]" to prereq string
+                         else
+                             prerequisiteString = prerequisiteString + " and " + preqAndOrObj;
+                     }
+
+                }
             }
+
+            span.innerHTML = prerequisiteString;
+            divSpan.appendChild(span)
+            document.getElementById('courseButtons').appendChild(btnShow); //add elemement to div[id=courseButtons] tag
+            document.getElementById('courseButtons').appendChild(divSpan);
+            document.getElementById('courseButtons').appendChild(br);
         }
 
-        span.innerHTML = prerequisiteString;
-        divSpan.appendChild(span)
-        document.getElementById('courseButtons').appendChild(btnShow); //add elemement to div[id=courseButtons] tag
-        document.getElementById('courseButtons').appendChild(divSpan);
-        document.getElementById('courseButtons').appendChild(br);
     }
-});
+    
+})(jQuery);
+
+
+/*
+* Initialize the Particle System.
+* This is used to display the course dependency graph.
+* @return - particle system object
+*/
+(function($)
+{
+    $.initializeParticleSystem = function()
+    {
+       /* Parameters for the Particle System. 
+        * The Particle System is used to represent the course dependency graph.
+        * Below the parameters of the Particle System constructor.
+        *      repulsion - the force repelling nodes from each other
+        *      stiffness - the rigidity of the edges
+        *      friction - the amount of damping in the system
+        *      gravity - an addtional force attracting nodes to the orgin
+        *      fps - frames per second
+        *      dt - timestep to use for steeping the simulation
+        *      precision - accuracy vs. speed in force calculations
+        */
+       var repulsionValue = 2000;
+       var stiffnessValue = 600;
+       var frictionValue = .5;
+       var gravityValue = true;
+       var fpsValue = 55;
+       var dtValue = 0.02;
+       var precisionValue = 0.6;
+
+       //call constructor to create the Particle System
+       //The user will be able to interact and modify this particle system.
+       var particleSystem = arbor.ParticleSystem(
+           {repulsion:repulsionValue, 
+           stiffness:stiffnessValue,
+           friction:frictionValue,
+           gravity:gravityValue,
+           fps:fpsValue, 
+           dt:dtValue,
+           precision:precisionValue
+           });
+       
+       return particleSystem;
+    }
+})(jQuery);
 
 
 /*
