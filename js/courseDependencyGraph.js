@@ -17,8 +17,12 @@ numToColorMapping[UNAVALIABLE_STATE] =  UNAVALIABLE_STATE_COLOR;
 numToColorMapping[COMPLETED_STATE] = COMPLETED_STATE_COLOR;
 numToColorMapping[READY_STATE] = READY_STATE_COLOR;
 
+//Path to academic major JSON files 
 var COMPUTER_SCIENCE_JSON_FILE = 'json/computerscience.json';
 var MATHEMATICS_JSON_FILE = 'json/mathematics.json';
+
+//This object represents the graph to built
+var particleSystem = initializeParticleSystem();
 
 /*
  * Execute code when DOM is fully loaded.
@@ -26,12 +30,21 @@ var MATHEMATICS_JSON_FILE = 'json/mathematics.json';
  */
 $(document).ready(function()
 {
+    // Get the initial value of selection option
+    var $acadMajor = $('#academicMajor');
+    $acadMajor.data('oldVal',  $acadMajor.val());
     $.builtSystem(COMPUTER_SCIENCE_JSON_FILE);
     
-    /*$('#academicMajor').change(function()
+    $acadMajor.change(function()
     {
-        $.builtSystem($(this).val());
-    });*/
+        var prevAcadMajorJSON = $(this).data('oldVal');
+        var newAcadMajorJSON = $(this).val(); 
+        $.clearCourseButtons();
+        $.clearParticleSystem(prevAcadMajorJSON);
+        $.builtSystem(newAcadMajorJSON);
+        $acadMajor.data('oldVal', newAcadMajorJSON); //store new json file as old value
+    });
+    
 });
 
 /*
@@ -43,7 +56,6 @@ $(document).ready(function()
 {
     $.builtSystem = function(jsonFile)
     {
-        var particleSystem = $.initializeParticleSystem();
         particleSystem.renderer = Renderer("#viewport"); //Initializes and redraws Particle system
 
         //Data on the completed Course Dependency Graph and the course dependency graph that is being built.
@@ -62,12 +74,18 @@ $(document).ready(function()
         });
 
         $.determineAllOutgoingEdges(courseArray, outgoingEdgeGraphArray); //populates the outgoingEdgeGraphArray
-        $.initializeGraph(particleSystem, courseArray, nodeStateArray); //initialize the default state of the Graph; Add courses with no dependency
+        $.initializeGraph(courseArray, nodeStateArray); //initialize the default state of the Graph; Add courses with no dependency
 
         //Trigger Event buttons
-        document.getElementById('displayEntireDependencyGraph').onclick = function(){$.createEntireCourseDependencyGraph(particleSystem, courseArray, nodeStateArray)};
-        document.getElementById('clearGraph').onclick = function(){$.clearEntireGraph(particleSystem, courseArray, nodeStateArray)};
+        document.getElementById('displayEntireDependencyGraph').onclick = function(){$.createEntireCourseDependencyGraph(courseArray, nodeStateArray)};
+        document.getElementById('clearGraph').onclick = function(){$.clearEntireGraph(courseArray, nodeStateArray)};
 
+        var labelTag = document.createElement('label'); //creates the title on the side panel
+        var coursesDiv = document.getElementById('courses'); //get the div tag with id = courses
+        var academicMajorName = $("#academicMajor option[value='"+ jsonFile +"']").text(); //get the value of the current select option
+        labelTag.innerHTML = "<b>" + academicMajorName +" Courses</b><br/>"; //set the content of label tag
+        coursesDiv.insertBefore(labelTag, coursesDiv.firstChild); //add title as the first child
+        
         //Dynamically generate trigger event buttons for courses
         //E.g. document.getElementById('MAT151').onclick = function(){changeNodeState('MAT151')};
         for(courseCode in courseArray) 
@@ -81,7 +99,7 @@ $(document).ready(function()
             btnShow.setAttribute("type", "button"); //set attribute for input element
             btnShow.value = courseCode +": " + courseArray[courseCode].Name; //set name value for element
             btnShow.onclick = (function(courseCode){
-            return function(){$.changeNodeState(particleSystem, courseArray, outgoingEdgeGraphArray, nodeStateArray, courseCode)};
+            return function(){$.changeNodeState(courseArray, outgoingEdgeGraphArray, nodeStateArray, courseCode)};
             })(courseCode); //attach custom onclick function to button
 
             var prerequisiteObj = courseArray[courseCode].Prerequisite;
@@ -143,9 +161,7 @@ $(document).ready(function()
             document.getElementById('courseButtons').appendChild(divSpan);
             document.getElementById('courseButtons').appendChild(br);
         }
-
-    }
-    
+    }  
 })(jQuery);
 
 
@@ -154,58 +170,84 @@ $(document).ready(function()
 * This is used to display the course dependency graph.
 * @return - particle system object
 */
-(function($)
+function initializeParticleSystem() 
 {
-    $.initializeParticleSystem = function()
+    /* Parameters for the Particle System. 
+     * The Particle System is used to represent the course dependency graph.
+     * Below the parameters of the Particle System constructor.
+     *      repulsion - the force repelling nodes from each other
+     *      stiffness - the rigidity of the edges
+     *      friction - the amount of damping in the system
+     *      gravity - an addtional force attracting nodes to the orgin
+     *      fps - frames per second
+     *      dt - timestep to use for steeping the simulation
+     *      precision - accuracy vs. speed in force calculations
+     */
+    var repulsionValue = 2000;
+    var stiffnessValue = 600;
+    var frictionValue = .5;
+    var gravityValue = true;
+    var fpsValue = 55;
+    var dtValue = 0.02;
+    var precisionValue = 0.6;
+
+    //call constructor to create the Particle System
+    //The user will be able to interact and modify this particle system.
+    var particleSystem = arbor.ParticleSystem(
+        {repulsion:repulsionValue, 
+        stiffness:stiffnessValue,
+        friction:frictionValue,
+        gravity:gravityValue,
+        fps:fpsValue, 
+        dt:dtValue,
+        precision:precisionValue
+        });
+
+    return particleSystem;
+}
+
+/*
+ * Clears the previous particle system.
+ * @param
+ *      prevAcadMajorJSON - Name of the previous major JSON file selected
+ */
+(function($) 
+{
+    $.clearParticleSystem = function (prevAcadMajorJSON)
     {
-       /* Parameters for the Particle System. 
-        * The Particle System is used to represent the course dependency graph.
-        * Below the parameters of the Particle System constructor.
-        *      repulsion - the force repelling nodes from each other
-        *      stiffness - the rigidity of the edges
-        *      friction - the amount of damping in the system
-        *      gravity - an addtional force attracting nodes to the orgin
-        *      fps - frames per second
-        *      dt - timestep to use for steeping the simulation
-        *      precision - accuracy vs. speed in force calculations
-        */
-       var repulsionValue = 2000;
-       var stiffnessValue = 600;
-       var frictionValue = .5;
-       var gravityValue = true;
-       var fpsValue = 55;
-       var dtValue = 0.02;
-       var precisionValue = 0.6;
+        var prevCourseArray;
+        
+        $.ajax({
+           url: prevAcadMajorJSON , //url: path to json file
+           async: false,  //async: function gets called in sequence with code, so var courseArray is populated
+           dataType: 'json', //json data 
+           success: function (json) {prevCourseArray=json;} //sets courseArray with json data
+       });
+        
+       //Iterate all courses in major
+       for(var key in prevCourseArray)
+       {
+           var currentNodeId = key; //String Identifier of current node
 
-       //call constructor to create the Particle System
-       //The user will be able to interact and modify this particle system.
-       var particleSystem = arbor.ParticleSystem(
-           {repulsion:repulsionValue, 
-           stiffness:stiffnessValue,
-           friction:frictionValue,
-           gravity:gravityValue,
-           fps:fpsValue, 
-           dt:dtValue,
-           precision:precisionValue
-           });
-       
-       return particleSystem;
+           //determine if node exist in Particle system
+           if($.doesNodeExist(currentNodeId))
+               particleSystem.pruneNode(currentNodeId); //Removes the corresponding Node from the particle system (as well as any Edges in which it is a participant).
+       }  
     }
-})(jQuery);
 
+})(jQuery);
 
 /*
  * Initialize the default state of the course dependency graph.
  * This adds the root nodes, which are courses with no dependency.
  * 
  * @param -
- *      particleSystem - This object represents the graph to built
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
  *      nodeStateArray - keeps track of the state of each node in current graph
  */
 (function($) 
 {
-    $.initializeGraph = function(particleSystem, courseArray, nodeStateArray)
+    $.initializeGraph = function(courseArray, nodeStateArray)
     {
         //Iterate through each course of an academic major
         for(var courseCode in courseArray)
@@ -215,7 +257,7 @@ $(document).ready(function()
 
             if(!doesCourseHavePrereq)
             {
-                $.addNode(particleSystem, courseCode, READY_STATE_COLOR); //add course that has no dependency into graph
+                $.addNode(courseCode, READY_STATE_COLOR); //add course that has no dependency into graph
                 nodeStateArray[courseCode] = READY_STATE; //mark course as "Ready" state   
             }
         }
@@ -228,13 +270,12 @@ $(document).ready(function()
  * Removes all the nodes and edges. Adds the root nodes.
  * 
  * @param -
- *      particleSystem - This object represents the graph to built
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
  *      nodeStateArray - keeps track of the state of each node in current graph
  */
 (function($) 
 {
-   $.clearEntireGraph = function(particleSystem, courseArray, nodeStateArray)
+   $.clearEntireGraph = function(courseArray, nodeStateArray)
    {
        //does not work since nodeStateArray is a local copy, but the properties/elements can still be modified 
        //nodeStateArray = {};//initialize a new object; previous object is garbage collected
@@ -251,11 +292,11 @@ $(document).ready(function()
            var currentNodeId = key; //String Identifier of current node
 
            //determine if node exist in Particle system
-           if($.doesNodeExist(particleSystem,currentNodeId))
+           if($.doesNodeExist(currentNodeId))
                particleSystem.pruneNode(currentNodeId); //Removes the corresponding Node from the particle system (as well as any Edges in which it is a participant).
        } 
 
-       $.initializeGraph(particleSystem, courseArray, nodeStateArray); //set to initial state of graph
+       $.initializeGraph(courseArray, nodeStateArray); //set to initial state of graph
    }
 })(jQuery);
 
@@ -264,17 +305,16 @@ $(document).ready(function()
  * Create the entire course dependency graph of an academic major.
  * 
  * @param -
- *      particleSystem - This object represents the graph to built
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
  *      nodeStateArray - keeps track of the state of each node in current graph
  */
 (function($) 
 {
-    $.createEntireCourseDependencyGraph = function(particleSystem, courseArray, nodeStateArray)
+    $.createEntireCourseDependencyGraph = function(courseArray, nodeStateArray)
     {
-        $.clearEntireGraph(particleSystem, courseArray, nodeStateArray); //clear existing particle system
-        $.createAllNodesForDependencyGraph(particleSystem, courseArray); //create all nodes; each node start off as a singleton
-        $.addDependencyEdges(particleSystem, courseArray); //adds the dependency edges 
+        $.clearEntireGraph(courseArray, nodeStateArray); //clear existing particle system
+        $.createAllNodesForDependencyGraph(courseArray); //create all nodes; each node start off as a singleton
+        $.addDependencyEdges(courseArray); //adds the dependency edges 
     }
 })(jQuery);
 
@@ -284,12 +324,11 @@ $(document).ready(function()
  * Each node start off as a singleton.
  * 
  * @param -
- *      particleSystem - This object represents the graph to built
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
  */
 (function($) 
 {
-    $.createAllNodesForDependencyGraph = function(particleSystem, courseArray)
+    $.createAllNodesForDependencyGraph = function(courseArray)
     {
         //Iterate array to create nodes in Particle System
        for(var key in courseArray)
@@ -307,12 +346,11 @@ $(document).ready(function()
  * This goes through each node and adds the node's outgoing edges.
  * 
  * @param -
- *      particleSystem - This object represents the graph to built
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
  */
 (function($) 
 {
-    $.addDependencyEdges = function(particleSystem, courseArray)
+    $.addDependencyEdges = function(courseArray)
     {
         //Iterate array to create dependency edges
         for(var key in courseArray)
@@ -425,7 +463,6 @@ $(document).ready(function()
  * -course must be in ready state
  * 
  * @param -
- *      particleSystem - This object represents the graph to built
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
  *      outgoingEdgeGraphArray - JSON object to containing each node's outgoing edges
  *      nodeStateArray - keeps track of the state of each node in current graph
@@ -433,12 +470,12 @@ $(document).ready(function()
  */
 (function($) 
 {
-    $.changeNodeState = function(particleSystem, courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId)
+    $.changeNodeState = function(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId)
     {
         //console.log($.printAllNodeState(nodeStateArray));
-        $.addNode(particleSystem, nodeId, COMPLETED_STATE_COLOR); //add completed Node to Particle System
+        $.addNode(nodeId, COMPLETED_STATE_COLOR); //add completed Node to Particle System
         nodeStateArray[nodeId] = COMPLETED_STATE; //mark course as taken
-        $.createNodeOutgoingEdges(particleSystem, courseArray ,outgoingEdgeGraphArray, nodeStateArray, nodeId); //add a node's outgoing edges
+        $.createNodeOutgoingEdges(courseArray ,outgoingEdgeGraphArray, nodeStateArray, nodeId); //add a node's outgoing edges
     }
 })(jQuery);
 
@@ -453,7 +490,7 @@ $(document).ready(function()
  */
 (function($) 
 {
-    $.addNode = function(particleSystem, nodeId, nodeColor)
+    $.addNode = function(nodeId, nodeColor)
     {
          var nodeData = {mass:1, label:nodeId, 'color': nodeColor, 'shape': NODE_SHAPE}; //node data(key-value pair)
          particleSystem.addNode(nodeId, nodeData); //add a node to the Particle System
@@ -467,7 +504,6 @@ $(document).ready(function()
  * avaiable on the graph; new nodes may be created in the process.
  * 
  * @param -
- *      particleSystem - This object represents the graph to built
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
  *      outgoingEdgeGraphArray - JSON object to containing each node's outgoing edges
  *      nodeStateArray - keeps track of the state of each node in current graph
@@ -475,7 +511,7 @@ $(document).ready(function()
  */
 (function($) 
 {
-    $.createNodeOutgoingEdges = function(particleSystem, courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId)
+    $.createNodeOutgoingEdges = function(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId)
     {
         var curNodeOutgoingEdges = outgoingEdgeGraphArray[nodeId]; //an array containing node's outgoing edges
         //console.log(curNodeOutgoingEdges);
@@ -491,12 +527,12 @@ $(document).ready(function()
                 var color = null; //get the corresponding color of state number
 
                 //check if seen node exist in the Particle System
-                if(!$.doesNodeExist(particleSystem, seenNodeId))
+                if(!$.doesNodeExist(seenNodeId))
                 {
                     stateNum = $.determineNodeState(courseArray, nodeStateArray, seenNodeId); //determine the state of the newly added Node
                     color = numToColorMapping[stateNum]; //get the corresponding color of state number
                     nodeStateArray[seenNodeId] = stateNum; //mark state of seen node  
-                    $.addNode(particleSystem, seenNodeId, color); //add seen node to graph
+                    $.addNode(seenNodeId, color); //add seen node to graph
                 }
 
                 //case: node is already seen, but new edges are being added which may change the state of exiting target nodes  
@@ -669,7 +705,7 @@ $(document).ready(function()
  */
 (function($) 
 {
-    $.doesNodeExist = function(particleSystem, nodeId)
+    $.doesNodeExist = function(nodeId)
     {
         return (typeof particleSystem.getNode(nodeId) === 'undefined') ? false : true;
     }
@@ -727,12 +763,11 @@ $(document).ready(function()
 * Remove dependency edges for the entire Graph.
 * 
 * @param
-*       particleSystem - This object represents the graph to built
 *       courseArray - JSON containing data of the whole system (courses of a single academic major)
 */
 (function($)
 {
-    $.removeDependencyEdges = function(particleSystem, courseArray)
+    $.removeDependencyEdges = function(courseArray)
     {
         //Iterate array
         for(var key in courseArray)
@@ -747,5 +782,25 @@ $(document).ready(function()
                 particleSystem.pruneEdge(edgeObj); //Removes edge from particle system
             }
         }   
+    }
+})(jQuery);
+
+/*
+ * Clear the course buttons. 
+ */
+(function($)
+{
+    $.clearCourseButtons = function()
+    {
+        var parentNode = document.getElementById("courses");
+        while (parentNode.firstChild) 
+        {
+            parentNode.removeChild(parentNode.firstChild);
+        }
+        
+        //add <div id="courseButtons"></div> to parent node 
+        var buttonsDiv = document.createElement('div');
+        buttonsDiv.setAttribute('id', 'courseButtons');
+        parentNode.appendChild(buttonsDiv);
     }
 })(jQuery);

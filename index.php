@@ -17,21 +17,20 @@
             <canvas id="viewport" width="800" height="600"></canvas>
 
            <div id="sidePanel">
-                 <div id="sidePanelNav">
-                        <a id="clearGraph" href="#">Reset Graph</a> <b>|</b>
-                        <a id="displayEntireDependencyGraph" href="#">Display Course Dependency Graph</a> <b>|</b>
-                 </div>
-
+               <div id="sidePanelNav">     
+                   <a id="clearGraph" href="#">Reset Graph</a> <b>|</b>
+                   <a id="displayEntireDependencyGraph" href="#">Display Course Dependency Graph</a>
+               </div>
+         
                <select id="academicMajor">
                    <option value="json/computerscience.json">Computer Science</option>
                    <option value="json/mathematics.json">Mathematics</option>
                </select>
-        
-                <form id="courses"> 
-                    <label><b>Courses</b></label><br />
-                    <div id="courseButtons"></div>     
-                </form>
-            </div>
+                     
+               <form id="courses"> 
+                   <div id="courseButtons"></div>     
+               </form>
+           </div>
         </div>
     </body>
 </html>
