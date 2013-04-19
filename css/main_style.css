@@ -1,0 +1,62 @@
+/* 
+    Document   : main_style
+    Created on : Apr 18, 2013, 6:03:48 PM
+    Author     : rayedchan
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+/*Particle System Canvas*/
+#viewport
+{
+    display:inline;
+    float: left;
+}
+
+/*Appearance of input button*/
+#courses input
+{
+    border: 1px solid #777777;
+    background: #585858;
+    color: white;
+    font: bold 11px 'Trebuchet MS';
+    padding: 1px;
+    cursor: pointer;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px; 
+}
+
+#courses input:hover
+{
+    border: 1px solid #777777;
+    background: #6e9e2d;
+    color: white;
+    font: bold 11px 'Trebuchet MS';
+    padding: 1px;
+    cursor: pointer;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px; 
+}
+
+/*Appearance of input button*/
+.prerequisites
+{
+    display:inline;
+    font: italic 11px 'Trebuchet MS';
+    color: orangered;
+
+}
+
+/*Side Panel Navigation Menu*/
+#sidePanelNav
+{
+    display: inline;
+    background: url(../img/bar.gif) center center repeat-x;
+}
+
+#sidePanelNav a
+{
+    color: black;
+    text-decoration: none;
+    font: bolder 12px 'Trebuchet MS';
+}
