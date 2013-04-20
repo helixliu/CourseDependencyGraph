@@ -14,6 +14,7 @@ My Suggestion for Improvments
 -Redesign algorithm and json data structure to handle complex course prerequisite  
 + Example Scenario: (C1 && (C2 || (C3 && C4)) || (C5 && C6)  
 + Example JSON Representation: OR:[[C1,OR:[C2,[C3,C4]]],[C5,C6]]  
+
 -Handle overlapping (equivalent) courses  
 
 The MIT License (MIT)
