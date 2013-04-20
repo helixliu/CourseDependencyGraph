@@ -1,0 +1,23 @@
+{
+   "PSY101" : {"Name": "General Psychology"},
+   "PSY200" : {"Name": "Quantitative Methods in Psychology "},
+   "PSY271" : {"Name": "Principles of Developmental Psychology", "Prerequisite" : ["PSY101"]},
+   "PSY272" : {"Name": "Drugs and Human Behavior", "Prerequisite" : ["PSY101"]},
+   "PSY300" : {"Name": "Research Methods in Psychology", "Prerequisite" : ["PSY101", "PSY200"]},
+   "PSY301" : {"Name": "Sensation and Perception", "Prerequisite" : ["PSY101"]},
+   "PSY303" : {"Name": "Memory", "Prerequisite" : ["PSY101"]},
+   "PSY305" : {"Name": "Cognition", "Prerequisite" : ["PSY101"]},
+   "PSY307" : {"Name": "Perception in Cognitive Science", "Prerequisite" : ["PSY101"]},
+   "PSY310" : {"Name": "Neuropsychology", "Prerequisite" : ["PSY101"]},
+   "PSY311" : {"Name": "Conditioning and Learning", "Prerequisite" : ["PSY101"]},
+   "PSY313" : {"Name": "Physiological Psychology", "Prerequisite" : ["PSY101"]},
+   "PSY315" : {"Name": "Comparative Psychology", "Prerequisite" : ["PSY101"]},
+   "PSY321" : {"Name": "Social Psychology", "Prerequisite" : ["PSY101"]},
+   "PSY323" : {"Name": "Research Methods in Social Psychology", "Prerequisite" : ["PSY200","PSY321"]},
+   "PSY351" : {"Name": "Psychology of Language ", "Prerequisite" : ["PSY101"]},
+   "PSY401" : {"Name": "Advanced Human Cognition", "Prerequisite" : ["PSY301", "PSY303", ["PSY305","PSY351"]]},
+   "PSY408 " : {"Name": "Reasoning and Decision Making", "Prerequisite" : ["PSY301", "PSY303", ["PSY305","PSY351"]]},
+   "PSY410" : {"Name": "Advanced Topics in Psychobiology", "Prerequisite" : [["PSY301","PSY311","PSY313"]]},
+   "PSY412" : {"Name": "Neuropsychopharmacology", "Prerequisite" : ["PSY313"]},
+   "PSY463" : {"Name": "Behavioral Pharmacology", "Prerequisite" : ["PSY313"]}
+}

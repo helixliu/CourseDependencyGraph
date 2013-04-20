@@ -25,6 +25,7 @@
                <select id="academicMajor">
                    <option value="json/computerscience.json">Computer Science</option>
                    <option value="json/mathematics.json">Mathematics</option>
+                   <option value="json/psychology.json">Psychology</option>
                </select>
                      
                <form id="courses"> 

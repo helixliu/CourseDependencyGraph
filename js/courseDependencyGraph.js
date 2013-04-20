@@ -20,6 +20,7 @@ numToColorMapping[READY_STATE] = READY_STATE_COLOR;
 //Path to academic major JSON files 
 var COMPUTER_SCIENCE_JSON_FILE = 'json/computerscience.json';
 var MATHEMATICS_JSON_FILE = 'json/mathematics.json';
+var PSYCHOLOGY_JSON_FILE = 'json/psychology.json';
 
 //This object represents the graph to built
 var particleSystem = initializeParticleSystem();
@@ -183,7 +184,7 @@ function initializeParticleSystem()
      *      dt - timestep to use for steeping the simulation
      *      precision - accuracy vs. speed in force calculations
      */
-    var repulsionValue = 2000;
+    var repulsionValue = 1000;
     var stiffnessValue = 600;
     var frictionValue = .5;
     var gravityValue = true;
