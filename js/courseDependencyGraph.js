@@ -75,8 +75,7 @@ $(document).ready(function()
         });
 
         $.determineAllOutgoingEdges(courseArray, outgoingEdgeGraphArray); //populates the outgoingEdgeGraphArray
-        $.initializeGraph(courseArray, nodeStateArray); //initialize the default state of the Graph; Add courses with no dependency
-
+       
         //Trigger Event buttons
         document.getElementById('displayEntireDependencyGraph').onclick = function(){$.createEntireCourseDependencyGraph(courseArray, nodeStateArray)};
         document.getElementById('clearGraph').onclick = function(){$.clearEntireGraph(courseArray, nodeStateArray)};
@@ -97,7 +96,9 @@ $(document).ready(function()
             var divSpan = document.createElement("div"); //container for span
 
             divSpan.setAttribute("class", "prerequisites"); //set class for div element
+            btnShow.setAttribute("class", "inactiveState"); //set inactive state for course button
             btnShow.setAttribute("type", "button"); //set attribute for input element
+            btnShow.setAttribute("id", courseCode); //set id for input button
             btnShow.value = courseCode +": " + courseArray[courseCode].Name; //set name value for element
             btnShow.onclick = (function(courseCode){
             return function(){$.changeNodeState(courseArray, outgoingEdgeGraphArray, nodeStateArray, courseCode)};
@@ -162,6 +163,8 @@ $(document).ready(function()
             document.getElementById('courseButtons').appendChild(divSpan);
             document.getElementById('courseButtons').appendChild(br);
         }
+        
+        $.initializeGraph(courseArray, nodeStateArray); //initialize the default state of the Graph; Add courses with no dependency
     }  
 })(jQuery);
 
@@ -185,10 +188,10 @@ function initializeParticleSystem()
      *      precision - accuracy vs. speed in force calculations
      */
     var repulsionValue = 1000;
-    var stiffnessValue = 600;
+    var stiffnessValue = 200;
     var frictionValue = .5;
     var gravityValue = true;
-    var fpsValue = 55;
+    var fpsValue = 40;
     var dtValue = 0.02;
     var precisionValue = 0.6;
 
@@ -259,7 +262,8 @@ function initializeParticleSystem()
             if(!doesCourseHavePrereq)
             {
                 $.addNode(courseCode, READY_STATE_COLOR); //add course that has no dependency into graph
-                nodeStateArray[courseCode] = READY_STATE; //mark course as "Ready" state   
+                nodeStateArray[courseCode] = READY_STATE; //mark course as "Ready" state  
+                $("#"+courseCode).attr("class", "readyState"); //change css of input button to  ready state
             }
         }
     }
@@ -284,7 +288,8 @@ function initializeParticleSystem()
        //Clear nodeStateArray
        for(var code in nodeStateArray)
        {
-            delete nodeStateArray[code];  
+            delete nodeStateArray[code]; //delete the element/property in object
+            $("#"+code).attr("class", "inactiveState");//put the course input button to inactive state
        }
        
        //Iterate all courses in major
@@ -455,7 +460,7 @@ function initializeParticleSystem()
  *   READY_STATE = course avaliable to take  
  *      
  * Possible Actions:
- * UNAVALIABLE_STATE Node -> READY_STATE Node
+ * UNAVALIABLE_STATE Node <-> READY_STATE Node
  * READY_STATE -> COMPLETED_STATE Node
  * 
  * For a node to change to completed state, 
@@ -474,9 +479,35 @@ function initializeParticleSystem()
     $.changeNodeState = function(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId)
     {
         //console.log($.printAllNodeState(nodeStateArray));
-        $.addNode(nodeId, COMPLETED_STATE_COLOR); //add completed Node to Particle System
-        nodeStateArray[nodeId] = COMPLETED_STATE; //mark course as taken
-        $.createNodeOutgoingEdges(courseArray ,outgoingEdgeGraphArray, nodeStateArray, nodeId); //add a node's outgoing edges
+        var stateVar = nodeStateArray[nodeId]; 
+        var nodeState = (typeof stateVar === 'undefined')? -1 : stateVar;
+        
+        //Possible actions when a node is in completed state
+        if(nodeState == COMPLETED_STATE)
+        {   
+            //Case 1: root node cannot be deleted; put to ready state
+            if($.isRootNode(courseArray, nodeId))
+            {
+                nodeStateArray[nodeId] = READY_STATE; //mark course as "Ready" state  
+                $("#"+nodeId).attr("class", "readyState"); //change input button to inactive state
+                particleSystem.getNode(nodeId).data.color = READY_STATE_COLOR;
+            }
+            
+            //Case 2: Remove non-root node from system
+            else
+            {
+                delete nodeStateArray[nodeId]; //remove node state
+                $.removeNodeFromSystem(nodeId); //remove node from particle system
+                $("#"+nodeId).attr("class", "inactiveState"); //change input button to inactive state
+            }
+        }
+        else
+        {
+            $("#"+nodeId).attr("class", "activeState"); //change css of input button to active state
+            $.addNode(nodeId, COMPLETED_STATE_COLOR); //add completed Node to Particle System
+            nodeStateArray[nodeId] = COMPLETED_STATE; //mark course as taken
+            $.createNodeOutgoingEdges(courseArray ,outgoingEdgeGraphArray, nodeStateArray, nodeId); //add a node's outgoing edges
+        }
     }
 })(jQuery);
 
@@ -485,7 +516,6 @@ function initializeParticleSystem()
  * Add the node to the Particle System.
  * 
  * @param -
- *      particleSystem - This object represents the graph to built
  *      nodeId - String Identifier of the new node
  *      nodeColor - state of the new node
  */
@@ -498,6 +528,19 @@ function initializeParticleSystem()
     }
 })(jQuery);
 
+/*
+ * Removes the node from the particle system.
+ * 
+ * @param
+ *      nodeId - String Identifier of node to be removed
+ */
+(function($) 
+{
+    $.removeNodeFromSystem = function(nodeId)
+    {
+         particleSystem.pruneNode(nodeId); //remove node
+    }
+})(jQuery);
 
 /*
  * Create a given node's outgoing edges in the particle system.
@@ -534,6 +577,11 @@ function initializeParticleSystem()
                     color = numToColorMapping[stateNum]; //get the corresponding color of state number
                     nodeStateArray[seenNodeId] = stateNum; //mark state of seen node  
                     $.addNode(seenNodeId, color); //add seen node to graph
+                    
+                    //Change color of the corresponding input button
+                    if(stateNum == READY_STATE)
+                        $("#"+seenNodeId).attr("class", "readyState"); //change css of input button to  ready state
+                        
                 }
 
                 //case: node is already seen, but new edges are being added which may change the state of exiting target nodes  
@@ -544,6 +592,9 @@ function initializeParticleSystem()
                      {
                          color = numToColorMapping[stateNum];
                          particleSystem.getNode(seenNodeId).data.color = color;
+                         
+                         if(stateNum == READY_STATE)
+                            $("#"+seenNodeId).attr("class", "readyState"); //change css of input button to  ready state
                      }    
                 }
 
@@ -709,6 +760,25 @@ function initializeParticleSystem()
     $.doesNodeExist = function(nodeId)
     {
         return (typeof particleSystem.getNode(nodeId) === 'undefined') ? false : true;
+    }
+})(jQuery);
+
+
+/*
+ * Determines wheather a node is a root node.
+ * Courses with no prequisites are defined as root node.
+ * 
+ * @param
+ *      courseArray - contains information of all courses in major
+ *      nodeId - course code of node to check
+ * 
+ *  @return - true if node is a root; false otherwise 
+ */
+(function($)
+{
+    $.isRootNode = function(courseArray, nodeId)
+    {
+        return (typeof courseArray[nodeId].Prerequisite === 'undefined') ? true : false;
     }
 })(jQuery);
 

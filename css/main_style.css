@@ -17,26 +17,36 @@
 #courses input
 {
     border: 1px solid #777777;
-    background: #585858;
     color: white;
     font: bold 11px 'Trebuchet MS';
     padding: 1px;
     cursor: pointer;
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px; 
+    
 }
 
 #courses input:hover
 {
-    border: 1px solid #777777;
     background: #6e9e2d;
-    color: white;
-    font: bold 11px 'Trebuchet MS';
-    padding: 1px;
-    cursor: pointer;
-    -moz-border-radius: 4px;
-    -webkit-border-radius: 4px; 
 }
+
+/*Possible States of course input button*/
+.activeState
+{
+    background: #6e9e2d;
+}
+
+.readyState
+{
+    background: #0000FF;
+}
+
+.inactiveState
+{
+    background: #585858;
+}
+
 
 /*Appearance of input button*/
 .prerequisites
