@@ -6,7 +6,7 @@ var NODE_SHAPE = 'dot';
 //Possible states of a node
 var UNAVALIABLE_STATE = 0; //Grey Node or Non-Existent Node
 var COMPLETED_STATE = 1; //Green Node
-var READY_STATE = 2; //Orange Node
+var READY_STATE = 2; //Blue Node
 var UNAVALIABLE_STATE_COLOR = 'grey';
 var COMPLETED_STATE_COLOR = 'green';
 var READY_STATE_COLOR = 'blue';
@@ -75,7 +75,8 @@ $(document).ready(function()
         });
 
         $.determineAllOutgoingEdges(courseArray, outgoingEdgeGraphArray); //populates the outgoingEdgeGraphArray
-       
+        //console.log(outgoingEdgeGraphArray);
+        
         //Trigger Event buttons
         document.getElementById('displayEntireDependencyGraph').onclick = function(){$.createEntireCourseDependencyGraph(courseArray, nodeStateArray)};
         document.getElementById('clearGraph').onclick = function(){$.clearEntireGraph(courseArray, nodeStateArray)};
@@ -289,13 +290,13 @@ function initializeParticleSystem()
        for(var code in nodeStateArray)
        {
             delete nodeStateArray[code]; //delete the element/property in object
-            $("#"+code).attr("class", "inactiveState");//put the course input button to inactive state
        }
        
        //Iterate all courses in major
        for(var key in courseArray)
        {
            var currentNodeId = key; //String Identifier of current node
+           $("#"+currentNodeId).attr("class", "inactiveState");//put the course input button to inactive state
 
            //determine if node exist in Particle system
            if($.doesNodeExist(currentNodeId))
@@ -340,7 +341,15 @@ function initializeParticleSystem()
        for(var key in courseArray)
        {
            var nodeId = key; //String Identifier of Node; Course code is used as the key
-           var nodeData = {mass:1, label:nodeId, 'color': UNAVALIABLE_STATE_COLOR, 'shape': NODE_SHAPE}; //node data(key-value pair)
+           var color = UNAVALIABLE_STATE_COLOR;
+           var doesCourseHavePrereq = (typeof courseArray[key].Prerequisite === 'undefined')? false : true; //determine if this course has prerequisites
+
+           if(!doesCourseHavePrereq)
+           {
+                color = READY_STATE_COLOR;
+           }
+                 
+           var nodeData = {mass:1, label:nodeId, 'color': color , 'shape': NODE_SHAPE}; //node data(key-value pair)
            particleSystem.addNode(nodeId, nodeData); //add a node to the Particle System
        }
     }
@@ -375,7 +384,7 @@ function initializeParticleSystem()
                    if(!(dependencyNodeId instanceof Array))
                    {
                       //Add black directed edge (required course) from dependency node to current node
-                      particleSystem.addEdge(dependencyNodeId, currentNodeId, {length:7, directed:true, 'color':'black'}); //addEdge(sourceNode,targetNode,edgeData)
+                      particleSystem.addEdge(dependencyNodeId, currentNodeId, {length:7, directed:true, 'color':LOGICAL_AND_EDGE_COLOR}); //addEdge(sourceNode,targetNode,edgeData)
                    }
 
                    else
@@ -385,8 +394,8 @@ function initializeParticleSystem()
                        {
                            var dependencyNodeIdOR = dependencyNodeId[j];//String Identifier of source node
 
-                           //Add Gray directed edge from dependency node to current node
-                           particleSystem.addEdge(dependencyNodeIdOR, currentNodeId, {length:7, directed:true}); //addEdge(sourceNode,targetNode,edgeData)
+                           //Add LOGICAL_OR_EDGE_COLOR directed edge from dependency node to current node
+                           particleSystem.addEdge(dependencyNodeIdOR, currentNodeId, {length:7, directed:true, 'color': LOGICAL_OR_EDGE_COLOR}); //addEdge(sourceNode,targetNode,edgeData)
                        }
                    }
                }
@@ -460,8 +469,13 @@ function initializeParticleSystem()
  *   READY_STATE = course avaliable to take  
  *      
  * Possible Actions:
- * UNAVALIABLE_STATE Node <-> READY_STATE Node
- * READY_STATE -> COMPLETED_STATE Node
+ * UNAVALIABLE_STATE Node -> READY_STATE Node (Add Op)
+ * READY_STATE -> UNAVALIABLE_STATE Node (Remove-Update Op)
+ * COMPLETED_STATE -> READY_STATE Node (Remove-Update Op)
+ * UNAVALIABLE_STATE ->  COMPLETED_STATE Node (*Add Op)
+ * READY_STATE Node ->  COMPLETED_STATE Node (*Add Op)
+ * COMPLETED_STATE Node -> UNAVALIABLE_STATE Node (*Remove Op)
+ * *Controlled by user
  * 
  * For a node to change to completed state, 
  * the following conditions must be fulfilled:
@@ -482,25 +496,16 @@ function initializeParticleSystem()
         var stateVar = nodeStateArray[nodeId]; 
         var nodeState = (typeof stateVar === 'undefined')? -1 : stateVar;
         
-        //Possible actions when a node is in completed state
+        //Node changes from completed state -> ready state
         if(nodeState == COMPLETED_STATE)
         {   
-            //Case 1: root node cannot be deleted; put to ready state
-            if($.isRootNode(courseArray, nodeId))
-            {
-                nodeStateArray[nodeId] = READY_STATE; //mark course as "Ready" state  
-                $("#"+nodeId).attr("class", "readyState"); //change input button to inactive state
-                particleSystem.getNode(nodeId).data.color = READY_STATE_COLOR;
-            }
-            
-            //Case 2: Remove non-root node from system
-            else
-            {
-                delete nodeStateArray[nodeId]; //remove node state
-                $.removeNodeFromSystem(nodeId); //remove node from particle system
-                $("#"+nodeId).attr("class", "inactiveState"); //change input button to inactive state
-            }
+            nodeStateArray[nodeId] = READY_STATE; //mark course as "Ready" state  
+            $("#"+nodeId).attr("class", "readyState"); //change input button to inactive state
+            particleSystem.getNode(nodeId).data.color = READY_STATE_COLOR;
+            $.recalculateParticleSystem(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId);//recalculate the state of each node that has a relationship with the removed node (look at the removed node's outging edges)
         }
+        
+        //Node is added to the system
         else
         {
             $("#"+nodeId).attr("class", "activeState"); //change css of input button to active state
@@ -508,9 +513,77 @@ function initializeParticleSystem()
             nodeStateArray[nodeId] = COMPLETED_STATE; //mark course as taken
             $.createNodeOutgoingEdges(courseArray ,outgoingEdgeGraphArray, nodeStateArray, nodeId); //add a node's outgoing edges
         }
+        //console.log(nodeStateArray);
     }
 })(jQuery);
 
+/*
+ * Recalculate the current Particle System.
+ * Node may be removed and a node's state may change.
+ * 
+ * @param -
+ *      courseArray - JSON containing data of the whole system (courses of a single academic major)
+ *      outgoingEdgeGraphArray - JSON object to containing each node's outgoing edges
+ *      nodeStateArray - keeps track of the state of each node in current graph
+ *      nodeId - String Identifier of the node in particle system that has changed
+ */
+(function($) 
+{
+    $.recalculateParticleSystem = function(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId)
+    {
+        //Case 1: Parent Leaf Node = do nothing
+        //Case 2: Parent Node with outgoing edges -> inspect child node
+        if($.hasOutgoingEdges(outgoingEdgeGraphArray, nodeId))
+        {
+              var childNodes = outgoingEdgeGraphArray[nodeId];
+              $.removeNodeOutgoingEdges(nodeId); //remove the parent node outgoing edges
+               
+              for(var i = 0; i < childNodes.length; i++)
+              {
+                  var child = childNodes[i];
+                  var childCurrentState = nodeStateArray[child]; 
+                  
+                  //Completed Node or Unseen node -> do nothing
+                  if((typeof childCurrentState === 'undefined') || childCurrentState == COMPLETED_STATE)
+                      continue;
+                  
+                  //Yellow node -> may need to change inactive state or be removed if isolated
+                  else if(childCurrentState == READY_STATE || childCurrentState == UNAVALIABLE_STATE)
+                  {
+                     //Isolated inactive-ready node should be removed
+                     if($.isNodeIsolated(child))
+                     {
+                          delete nodeStateArray[child]; //delete node state
+                          $.removeNodeFromSystem(child); //remove node from particle system
+                          $("#"+child).attr("class", "inactiveState");//put the course input button to inactive state
+                     }
+                     
+                     //Re-evaluate child node state
+                     else
+                     {
+                        var stateNum = $.determineNodeState(courseArray, nodeStateArray, child);
+                        if(stateNum != null)
+                        {
+                            var color = numToColorMapping[stateNum];
+                            particleSystem.getNode(child).data.color = color;
+                            nodeStateArray[child] = stateNum; //update to new state 
+                            
+                            //Change color of the corresponding input button
+                            if(stateNum == READY_STATE)
+                                $("#"+child).attr("class", "readyState"); //change css of input button to  ready state
+                            
+                            else if(stateNum == UNAVALIABLE_STATE)
+                                $("#"+child).attr("class", "inactiveState");//put the course input button to inactive state
+                        }
+                     }
+                          
+                  }
+                      
+              }
+        }
+        
+    }
+})(jQuery);
 
 /*
  * Add the node to the Particle System.
@@ -577,7 +650,8 @@ function initializeParticleSystem()
                     color = numToColorMapping[stateNum]; //get the corresponding color of state number
                     nodeStateArray[seenNodeId] = stateNum; //mark state of seen node  
                     $.addNode(seenNodeId, color); //add seen node to graph
-                    
+                    //console.log(nodeStateArray);
+                     
                     //Change color of the corresponding input button
                     if(stateNum == READY_STATE)
                         $("#"+seenNodeId).attr("class", "readyState"); //change css of input button to  ready state
@@ -592,6 +666,8 @@ function initializeParticleSystem()
                      {
                          color = numToColorMapping[stateNum];
                          particleSystem.getNode(seenNodeId).data.color = color;
+                         nodeStateArray[seenNodeId] = stateNum; //update to new state 
+                         //console.log(nodeStateArray);
                          
                          if(stateNum == READY_STATE)
                             $("#"+seenNodeId).attr("class", "readyState"); //change css of input button to  ready state
@@ -601,6 +677,25 @@ function initializeParticleSystem()
                 particleSystem.addEdge(nodeId, seenNodeId, edgeData); //attach directed edge from given node to new node that is seen
             }  
         }
+    }
+})(jQuery);
+
+
+/*
+ * Removes a given node outgoing edges.
+ * @param -
+ *      nodeId - Node String Identifier (Course code) to remove outgoing edges 
+ */
+(function($)
+{
+    $.removeNodeOutgoingEdges = function(nodeId)
+    {
+        var nodeOutgoingEdges = particleSystem.getEdgesFrom(nodeId); //Returns an array containing all Edge objects in which the node is the source. If no connections exist, returns [].
+        
+        for(var i = 0; i < nodeOutgoingEdges.length; i++)
+        {
+            particleSystem.pruneEdge(nodeOutgoingEdges[i]);//Removes the corresponding Edge from the particle system.   
+        }    
     }
 })(jQuery);
 
@@ -632,15 +727,14 @@ function initializeParticleSystem()
         }
 
         //based on the assumptions that the target node and the source node has
-        //a relationship, it not necessary to iterate through the nested prequiaites
+        //a relationship, it not necessary to iterate through the nested prequisites
         return LOGICAL_OR_EDGE_COLOR;
     }
 })(jQuery);
 
 
 /*
- * Determines the state of the new node after this node has been introduced
- * into the graph that is being built.
+ * Determines the state of a node after a change has been made on the graph.
  *  
  * @param -
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
@@ -657,7 +751,7 @@ function initializeParticleSystem()
         //console.log("determineNodeState: " + nodeId + " = "  + currentNodeState);
 
         //Case 1: Course is not in current graph or course cannot be taken yet 
-        if((typeof currentNodeState === 'undefined') || currentNodeState == 0)
+        if((typeof currentNodeState === 'undefined') || currentNodeState == UNAVALIABLE_STATE || currentNodeState == READY_STATE )
         {
             //current node must be READY_STATEif prerequisites has been fulfilled
             if($.isCourseReadyToBeTaken(courseArray, nodeStateArray, nodeId))
@@ -668,6 +762,7 @@ function initializeParticleSystem()
                 return UNAVALIABLE_STATE; 
         } 
 
+       //console.log("DetermineNodeState() returned NULL");
        return null;
     }
 })(jQuery);
@@ -765,14 +860,14 @@ function initializeParticleSystem()
 
 
 /*
- * Determines wheather a node is a root node.
+ * Determines whether a node is a root node.
  * Courses with no prequisites are defined as root node.
  * 
  * @param
  *      courseArray - contains information of all courses in major
  *      nodeId - course code of node to check
  * 
- *  @return - true if node is a root; false otherwise 
+ * @return - true if node is a root; false otherwise 
  */
 (function($)
 {
@@ -784,11 +879,47 @@ function initializeParticleSystem()
 
 
 /*
+ * Determines whether a node has outgoing edge.
+ * This also determines if a node is a leaf node. (node that has no children)
+ * @param
+ *      outgoingEdgeGraphArray - JSON object to containing each node's outgoing edges 
+ *      nodeId - course code of node to check
+ * 
+ * @return - true if node has outgoing edges root; false otherwise
+ */
+(function($)
+{
+    $.hasOutgoingEdges = function(outgoingEdgeGraphArray, nodeId)
+    {
+        return (typeof outgoingEdgeGraphArray[nodeId] === 'undefined')? false : true;
+    }
+    
+})(jQuery);
+
+
+/*
+ * Determine if a node is isolated.
+ * No outgoing or incoming edges.
+ * @param -
+ *      nodeId - String Identifier of node to check
+ *      
+ * @return - true if node is isolated; false otherwise
+ */
+(function($)
+{
+    $.isNodeIsolated = function(nodeId)
+    {
+        return particleSystem.getEdgesFrom(nodeId).length == 0 && particleSystem.getEdgesTo(nodeId).length == 0;
+    }
+    
+})(jQuery);
+
+
+/*
  * Prints the current state of each node
  * 
  * @param -
- *      nodeStateArray - keeps track of the state of each node in current graph
- *      
+ *      nodeStateArray - keeps track of the state of each node in current graph 
  */
 (function($)
 {
@@ -855,6 +986,7 @@ function initializeParticleSystem()
         }   
     }
 })(jQuery);
+
 
 /*
  * Clear the course buttons. 
