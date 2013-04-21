@@ -469,10 +469,10 @@ function initializeParticleSystem()
  *   READY_STATE = course avaliable to take  
  *      
  * Possible Actions:
- * UNAVALIABLE_STATE Node -> READY_STATE Node (Add Op)
- * READY_STATE -> UNAVALIABLE_STATE Node (Remove-Update Op)
+ * UNAVALIABLE_STATE Node -> READY_STATE Node (Result of Add Op)
+ * READY_STATE -> UNAVALIABLE_STATE Node (Result of Remove-Update Op)
  * COMPLETED_STATE -> READY_STATE Node (Remove-Update Op)
- * UNAVALIABLE_STATE ->  COMPLETED_STATE Node (*Add Op)
+ * UNAVALIABLE_STATE ->  COMPLETED_STATE Node (Not supported)
  * READY_STATE Node ->  COMPLETED_STATE Node (*Add Op)
  * COMPLETED_STATE Node -> UNAVALIABLE_STATE Node (*Remove Op)
  * *Controlled by user
@@ -495,9 +495,10 @@ function initializeParticleSystem()
         //console.log($.printAllNodeState(nodeStateArray));
         var stateVar = nodeStateArray[nodeId]; 
         var nodeState = (typeof stateVar === 'undefined')? -1 : stateVar;
+        var canNodeSwitchFromCompletedToReady =$.canNodeSwitchFromCompletedToReady(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId);
         
         //Node changes from completed state -> ready state
-        if(nodeState == COMPLETED_STATE)
+        if(nodeState == COMPLETED_STATE && canNodeSwitchFromCompletedToReady)
         {   
             nodeStateArray[nodeId] = READY_STATE; //mark course as "Ready" state  
             $("#"+nodeId).attr("class", "readyState"); //change input button to inactive state
@@ -505,8 +506,8 @@ function initializeParticleSystem()
             $.recalculateParticleSystem(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId);//recalculate the state of each node that has a relationship with the removed node (look at the removed node's outging edges)
         }
         
-        //Node is added to the system
-        else
+        //Node is added to the system if it is in ready state
+        else if(nodeState == READY_STATE)
         {
             $("#"+nodeId).attr("class", "activeState"); //change css of input button to active state
             $.addNode(nodeId, COMPLETED_STATE_COLOR); //add completed Node to Particle System
@@ -910,6 +911,63 @@ function initializeParticleSystem()
     $.isNodeIsolated = function(nodeId)
     {
         return particleSystem.getEdgesFrom(nodeId).length == 0 && particleSystem.getEdgesTo(nodeId).length == 0;
+    }
+    
+})(jQuery);
+
+
+/*
+ * Determines if a node can be switched from completed to ready
+ * @param -
+ *      courseArray - JSON containing data of the whole system (courses of a single academic major)
+ *      outgoingEdgeGraphArray - JSON object to containing each node's outgoing edges
+ *      nodeStateArray - keeps track of the state of each node in current graph
+ *      nodeId - node to inspect
+ */
+(function($)
+{
+    $.canNodeSwitchFromCompletedToReady = function(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId)
+    {
+        var childNodes =  outgoingEdgeGraphArray[nodeId];
+        
+        if(!(typeof childNodes === 'undefined'))
+        {
+            for(var i = 0; i < childNodes.length; i++)
+            {
+                var childNode = childNodes[i];
+                var childNodeState = nodeStateArray[childNode];
+                var childNodePrereq = courseArray[childNode].Prerequisite;
+                var childNodeCompletedWithoutParent = false; //determine if child is completed even if the parent node is removed
+                
+                if(!(typeof childNodePrereq === 'undefined'))
+                {
+                    for(var j = 0; j < childNodePrereq.length; j++)
+                    {
+                        var elementOrList = childNodePrereq[j];
+                        
+                        if(elementOrList instanceof Array)
+                        {
+                            for(var k = 0; k < elementOrList.length; k++)
+                            {
+                                 var ele = elementOrList[k];
+                                
+                                 //skip node that is tested to be removed
+                                 if(ele == nodeId)
+                                     continue;
+                                 
+                                 else if(nodeStateArray[ele] == COMPLETED_STATE)
+                                     childNodeCompletedWithoutParent = true;
+                            }
+                        }    
+                    }    
+                }
+
+                if(childNodeState == COMPLETED_STATE && (!childNodeCompletedWithoutParent))
+                    return false;
+            }
+        }
+        
+        return true;
     }
     
 })(jQuery);
