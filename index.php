@@ -14,7 +14,7 @@
     
     <body>
         <div id="container">
-            <canvas id="viewport" width="800" height="600"></canvas>
+           <canvas id="viewport" width="800" height="600"></canvas>
 
            <div id="sidePanel">
                <div id="sidePanelNav">     
@@ -27,11 +27,20 @@
                    <option value="json/mathematics.json">Mathematics</option>
                    <option value="json/psychology.json">Psychology</option>
                </select>
-                     
+                   
                <form id="courses"> 
                    <div id="courseButtons"></div>     
                </form>
            </div>
         </div>
+        
+        <div id="legend">
+            <ul>
+                <li><span class="greybox"></span> - Unavailable</li>
+                <li><span class="bluebox"></span> - Ready to Take</li>
+                <li><span class="greenbox"></span> - Complete</li>
+            </ul>
+        </div>
+        
     </body>
 </html>

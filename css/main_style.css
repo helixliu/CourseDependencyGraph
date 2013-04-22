@@ -47,7 +47,6 @@
     background: #585858;
 }
 
-
 /*Appearance of input button*/
 .prerequisites
 {
@@ -69,4 +68,53 @@
     color: black;
     text-decoration: none;
     font: bolder 12px 'Trebuchet MS';
+}
+
+#sidePanelNav a:hover
+{
+    color: red;
+}
+
+/*Legend for Graph*/
+#legend ul
+{  
+    list-style-type: none;
+}
+
+#legend ul li
+{ 
+    float: left; 
+    margin-right: 25px;
+}
+
+.bluebox 
+{ 
+    float: left; 
+    width: 20px; 
+    height: 20px; 
+    background-color: blue;
+}
+
+.greybox 
+{ 
+    float: left; 
+    width: 20px; 
+    height: 20px; 
+    background-color: grey;
+}
+
+.greenbox
+{ 
+    float: left; 
+    width: 20px; 
+    height: 20px; 
+    background-color: green;
+}
+
+.redbox
+{ 
+    float: left; 
+    width: 20px; 
+    height: 20px; 
+    background-color: red;
 }
