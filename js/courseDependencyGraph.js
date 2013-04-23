@@ -98,14 +98,12 @@ $(document).ready(function()
             var span = document.createElement("span"); //create span element to display course prerequisites
             var br = document.createElement("br"); //create break line element
             var divSpan = document.createElement("div"); //container for span
-            var btnUndo = document.createElement("input"); //undo button
+            var spanUndo = document.createElement("img"); //undo indication
 
-            divSpan.setAttribute("class", "prerequisites"); //set class for div element
-            
-            btnUndo.setAttribute("class", "hidden");
-            btnUndo.setAttribute("type", "button");
-            btnUndo.setAttribute("id", courseCode + "Undo");
-
+            divSpan.setAttribute("class", "prerequisites"); //set class for div element           
+            spanUndo.setAttribute("class", "hidden"); //hide undo indication picture
+            spanUndo.setAttribute("src", UNDO_BUTTON_SRC); //set source of image
+            spanUndo.setAttribute("id", courseCode + "Undo"); //id of undo span
             btnShow.setAttribute("class", "inactiveState"); //set inactive state for course button
             btnShow.setAttribute("type", "button"); //set attribute for input element
             btnShow.setAttribute("id", courseCode); //set id for input button
@@ -170,7 +168,7 @@ $(document).ready(function()
             span.innerHTML = prerequisiteString;
             divSpan.appendChild(span)
             document.getElementById('courseButtons').appendChild(btnShow); //add elemement to div[id=courseButtons] tag
-            document.getElementById('courseButtons').appendChild(btnUndo); //add undo button
+            document.getElementById('courseButtons').appendChild(spanUndo); //add undo button
             document.getElementById('courseButtons').appendChild(divSpan); //add prerequisites tag
             document.getElementById('courseButtons').appendChild(br); //break line
         }
@@ -305,6 +303,7 @@ function initializeParticleSystem()
        //Iterate all courses in major
        for(var key in courseArray)
        {
+           $("#"+key + "Undo").addClass('hidden'); //hide undo button
            var currentNodeId = key; //String Identifier of current node
            $("#"+currentNodeId).attr("class", "inactiveState");//put the course input button to inactive state
 

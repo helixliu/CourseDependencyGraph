@@ -23,7 +23,6 @@
     cursor: pointer;
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px; 
-    
 }
 
 #courses input:hover
@@ -32,12 +31,12 @@
 }
 
 /*Style for all the undo buttons*/
-#courses input[id*='Undo']
+#courses img[id*='Undo']
 {
-    width: 15px; 
-    height: 15px;
+    width: 16px; 
+    height: 16px;
     background: url(../img/undo.jpg);
-    background-size: 15px 15px;
+    background-size: 16px 16px;
     background-repeat: no-repeat;
 }
 
@@ -108,6 +107,8 @@
     width: 20px; 
     height: 20px; 
     background-color: blue;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px; 
 }
 
 .greybox 
@@ -116,6 +117,8 @@
     width: 20px; 
     height: 20px; 
     background-color: grey;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px; 
 }
 
 .greenbox
@@ -124,6 +127,8 @@
     width: 20px; 
     height: 20px; 
     background-color: green;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px; 
 }
 
 .redbox
@@ -132,6 +137,8 @@
     width: 20px; 
     height: 20px; 
     background-color: red;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px; 
 }
 
 
