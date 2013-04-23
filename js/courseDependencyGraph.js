@@ -22,6 +22,9 @@ var COMPUTER_SCIENCE_JSON_FILE = 'json/computerscience.json';
 var MATHEMATICS_JSON_FILE = 'json/mathematics.json';
 var PSYCHOLOGY_JSON_FILE = 'json/psychology.json';
 
+//Image source
+var UNDO_BUTTON_SRC = 'img/undo.jpg';
+
 //This object represents the graph to built
 var particleSystem = initializeParticleSystem();
 
@@ -95,8 +98,14 @@ $(document).ready(function()
             var span = document.createElement("span"); //create span element to display course prerequisites
             var br = document.createElement("br"); //create break line element
             var divSpan = document.createElement("div"); //container for span
+            var btnUndo = document.createElement("input"); //undo button
 
             divSpan.setAttribute("class", "prerequisites"); //set class for div element
+            
+            btnUndo.setAttribute("class", "hidden");
+            btnUndo.setAttribute("type", "button");
+            btnUndo.setAttribute("id", courseCode + "Undo");
+
             btnShow.setAttribute("class", "inactiveState"); //set inactive state for course button
             btnShow.setAttribute("type", "button"); //set attribute for input element
             btnShow.setAttribute("id", courseCode); //set id for input button
@@ -111,7 +120,7 @@ $(document).ready(function()
             //Generate the Prequisite string for a course 
             if(!(typeof prerequisiteObj === 'undefined'))
             {
-                prerequisiteString = "Prerequisite: ";
+                prerequisiteString = " Prerequisite: ";
                 for(var i = 0; i < prerequisiteObj.length; i++)
                 {
                      var preqAndOrObj = prerequisiteObj[i];
@@ -161,8 +170,9 @@ $(document).ready(function()
             span.innerHTML = prerequisiteString;
             divSpan.appendChild(span)
             document.getElementById('courseButtons').appendChild(btnShow); //add elemement to div[id=courseButtons] tag
-            document.getElementById('courseButtons').appendChild(divSpan);
-            document.getElementById('courseButtons').appendChild(br);
+            document.getElementById('courseButtons').appendChild(btnUndo); //add undo button
+            document.getElementById('courseButtons').appendChild(divSpan); //add prerequisites tag
+            document.getElementById('courseButtons').appendChild(br); //break line
         }
         
         $.initializeGraph(courseArray, nodeStateArray); //initialize the default state of the Graph; Add courses with no dependency
@@ -512,8 +522,20 @@ function initializeParticleSystem()
             $("#"+nodeId).attr("class", "activeState"); //change css of input button to active state
             $.addNode(nodeId, COMPLETED_STATE_COLOR); //add completed Node to Particle System
             nodeStateArray[nodeId] = COMPLETED_STATE; //mark course as taken
-            $.createNodeOutgoingEdges(courseArray ,outgoingEdgeGraphArray, nodeStateArray, nodeId); //add a node's outgoing edges
+            $.createNodeOutgoingEdges(courseArray, outgoingEdgeGraphArray, nodeStateArray, nodeId); //add a node's outgoing edges
         }
+        
+        //Recalculate to which see courses can be undo
+        for(var courseCode in courseArray)
+        {
+             var hasAbilityToUndo =$.canNodeSwitchFromCompletedToReady(courseArray, outgoingEdgeGraphArray, nodeStateArray, courseCode);
+             var state = nodeStateArray[courseCode]; 
+             if(state == COMPLETED_STATE && hasAbilityToUndo)
+                 $("#"+courseCode + "Undo").removeClass('hidden'); //show undo button
+             else
+                 $("#"+courseCode + "Undo").addClass('hidden'); //hide undo button
+        }
+        
         //console.log(nodeStateArray);
     }
 })(jQuery);
@@ -699,6 +721,7 @@ function initializeParticleSystem()
         }    
     }
 })(jQuery);
+
 
 /*
  * Determines the color of an edge. Only two edge types exist for this Graph:

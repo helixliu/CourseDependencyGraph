@@ -31,6 +31,21 @@
     background: #6e9e2d;
 }
 
+/*Style for all the undo buttons*/
+#courses input[id*='Undo']
+{
+    width: 15px; 
+    height: 15px;
+    background: url(../img/undo.jpg);
+    background-size: 15px 15px;
+    background-repeat: no-repeat;
+}
+
+/*#courses input[id*='Undo']:hover
+{
+    background: grey;
+}*/
+
 /*Possible States of course input button*/
 .activeState
 {
@@ -117,4 +132,21 @@
     width: 20px; 
     height: 20px; 
     background-color: red;
+}
+
+
+.undobox
+{ 
+    float: left; 
+    width: 20px; 
+    height: 20px;
+    background: url(../img/undo.jpg);
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+}
+
+/*Hide element from Page*/
+.hidden
+{
+    display: none;
 }

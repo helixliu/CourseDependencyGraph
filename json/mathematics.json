@@ -10,7 +10,7 @@
    "MAT312" : {"Name": "Advanced Calculus II", "Prerequisite" : ["MAT311"]},
    "MAT321" : {"Name": "Introduction to Applied Mathematics", "Prerequisite" : ["MAT252"]},
    "MAT336" : {"Name": "Dynamical Models in Biology", "Prerequisite" : ["MAT252","MAT250"]},
-   "MAT338" : {"Name": "Discrete and Probabilistic Models in Biology", "Prerequisite" : ["MAT250","MAT251","MAT477"]},
+   "MAT338" : {"Name": "Probabilistic Models in Biology", "Prerequisite" : ["MAT250","MAT251","MAT477"]},
    "MAT348" : {"Name": "Cryptography", "Prerequisite" : ["MAT250",["MAT300","MAT356","MAT477"]]},
    "MAT350" : {"Name": "Linear Algebra", "Prerequisite" : ["MAT252", "MAT250", "MAT300"]},
    "MAT354" : {"Name": "Linear Optimization", "Prerequisite" : ["MAT250"]},

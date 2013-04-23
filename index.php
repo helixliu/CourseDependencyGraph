@@ -39,6 +39,7 @@
                 <li><span class="greybox"></span> - Unavailable</li>
                 <li><span class="bluebox"></span> - Ready to Take</li>
                 <li><span class="greenbox"></span> - Complete</li>
+                <li><span class="undobox"></span> - Able to Undo</li>
             </ul>
         </div>
         
