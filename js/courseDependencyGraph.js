@@ -20,6 +20,7 @@ numToColorMapping[READY_STATE] = READY_STATE_COLOR;
 //Path to academic major JSON files 
 var CHEMISTRY_JSON_FILE = 'json/chemistry.json';
 var COMPUTER_SCIENCE_JSON_FILE = 'json/computerscience.json';
+var ECONOMICS_JSON_FILE = 'json/economics.json';
 var MATHEMATICS_JSON_FILE = 'json/mathematics.json';
 var PSYCHOLOGY_JSON_FILE = 'json/psychology.json';
 

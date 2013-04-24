@@ -10,7 +10,7 @@
    "CHE251" : {"Name": "Analytical Chemistry", "Prerequisite" : ["CHE162","CHE171"]},
    "CHE307" : {"Name": "Organic Chemistry I", "Prerequisite" : ["CHE162"]},
    "CHE308" : {"Name": "Organic Chemistry II", "Prerequisite" : ["CHE307"]},
-   "CHE313" : {"Name": "Organic Chemistry Laboratory I", "Prerequisite" : ["CHE171", "CHE162"]},
+   "CHE313" : {"Name": "Organic Chemistry Laboratory I", "Prerequisite" : ["CHE162", "CHE171"]},
    "CHE314" : {"Name": "Organic Chemistry Laboratory II", "Prerequisite" : ["CHE307","CHE313"]},
    "CHE323" : {"Name": "Physical Chemistry I", "Prerequisite" : ["CHE162", "MAT251", "PHY204"]},
    "CHE324" : {"Name": "Physical Chemistry II", "Prerequisite" : ["CHE323"]},
