@@ -1,6 +1,6 @@
 CourseDependencyGraph
 =====================
-
+Demo: http://rayedchancdg.weebly.com/  
 Course dependency graph of an academic major. This project uses ArborJS to build and display a dependency graph. Useful information can be obtained from dependency graph like course prerequisites, minimum number of semesters to complete a major (longest path), courses that are ready to be taken given completed courses, to name a few.
 
 Bugs
