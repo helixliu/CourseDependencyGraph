@@ -30,7 +30,9 @@
     background: #6e9e2d;
 }
 
-/*Style for all the undo buttons*/
+/*Style for all the undo buttons; The square brackets are used as an attribute selector,
+to select all elements that have a certain attribute value. In other words, they detect attribute presence.
+The "*" affects any input element whose name attribute value contains the string “Undo”.*/
 #courses img[id*='Undo']
 {
     width: 16px; 

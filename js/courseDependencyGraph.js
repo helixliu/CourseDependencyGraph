@@ -12,7 +12,7 @@ var COMPLETED_STATE_COLOR = 'green';
 var READY_STATE_COLOR = 'blue';
 
 //Mapping state to corresponding color
-var numToColorMapping = {};
+var numToColorMapping = {}; // new object
 numToColorMapping[UNAVALIABLE_STATE] =  UNAVALIABLE_STATE_COLOR;
 numToColorMapping[COMPLETED_STATE] = COMPLETED_STATE_COLOR;
 numToColorMapping[READY_STATE] = READY_STATE_COLOR;
@@ -28,7 +28,7 @@ var PSYCHOLOGY_JSON_FILE = 'json/psychology.json';
 var UNDO_BUTTON_SRC = 'img/undo.jpg';
 
 //This object represents the graph to built
-var particleSystem = initializeParticleSystem();
+var particleSystem = initializeParticleSystem(); // method call creates particle system; the particle system template is used throughout
 
 /*
  * Execute code when DOM is fully loaded.
@@ -37,18 +37,23 @@ var particleSystem = initializeParticleSystem();
 $(document).ready(function()
 {
     // Get the initial value of selection option
-    var $acadMajor = $('#academicMajor');
+    var $acadMajor = $('#academicMajor'); // "$" used here refers to the jQuery object representation of the dom object
+    
+    // Store the initial major as the old value 
     $acadMajor.data('oldVal',  $acadMajor.val());
+    
+    // Initial academic major on landing page
     $.builtSystem(COMPUTER_SCIENCE_JSON_FILE);
     
+    // Executed whenever an academic major changes
     $acadMajor.change(function()
     {
-        var prevAcadMajorJSON = $(this).data('oldVal');
-        var newAcadMajorJSON = $(this).val(); 
-        $.clearCourseButtons();
-        $.clearParticleSystem(prevAcadMajorJSON);
-        $.builtSystem(newAcadMajorJSON);
-        $acadMajor.data('oldVal', newAcadMajorJSON); //store new json file as old value
+        var prevAcadMajorJSON = $(this).data('oldVal'); // Fetch the previous academic major
+        var newAcadMajorJSON = $(this).val(); // Get the new selected academic major 
+        $.clearCourseButtons(); // Clear the previous academic major courses
+        $.clearParticleSystem(prevAcadMajorJSON); // Clear the previous academic major by removing the objects within the particle system
+        $.builtSystem(newAcadMajorJSON); // Add the new academic major objects into the particle system
+        $acadMajor.data('oldVal', newAcadMajorJSON); // Store new json file as old value
     });
     
 });
@@ -121,9 +126,11 @@ $(document).ready(function()
             if(!(typeof prerequisiteObj === 'undefined'))
             {
                 prerequisiteString = " Prerequisite: ";
+                
+                // Iterate through the prerequisites
                 for(var i = 0; i < prerequisiteObj.length; i++)
                 {
-                     var preqAndOrObj = prerequisiteObj[i];
+                     var preqAndOrObj = prerequisiteObj[i]; // The prerequisite object may be a string or a list
 
                      //Always dealing with two or more "OR elements"
                      if(preqAndOrObj instanceof Array)
@@ -133,7 +140,9 @@ $(document).ready(function()
 
                          //Case: OR group is not first element 
                          if(i != 0)
-                             prerequisiteString = prerequisiteString + " and "
+                         {
+                             prerequisiteString = prerequisiteString + " and ";
+                         }
 
                          for(var j = 0; j < preqOrObjLength; j++)
                          {
@@ -163,12 +172,11 @@ $(document).ready(function()
                          else
                              prerequisiteString = prerequisiteString + " and " + preqAndOrObj;
                      }
-
                 }
             }
 
             span.innerHTML = prerequisiteString;
-            divSpan.appendChild(span)
+            divSpan.appendChild(span);
             document.getElementById('courseButtons').appendChild(btnShow); //add elemement to div[id=courseButtons] tag
             document.getElementById('courseButtons').appendChild(spanUndo); //add undo button
             document.getElementById('courseButtons').appendChild(divSpan); //add prerequisites tag
@@ -417,9 +425,15 @@ function initializeParticleSystem()
 
 
 /*
- * Determine all the outgoing edges for each node.     
+ * Determine all the outgoing edges for each node. Bascially mapping is determined by prerequisites to courseCode relation.    
  * This will populate the outgoingEdgeGraphArray.
  * JSON Format: {NodeId1: outgoingEdgeArray1[], NodeId2: outgoingEdgeArray2[]}
+ * E.g. {CS111: outgoingEdgeArray["CS112", "CS205"]}
+ * 
+ * Sample inspected entry = "CS112" : {"Name": "Data Structures", "Prerequisite" : ["MAT151","CS111"]}
+ * From just inspecting this entry, the code will result in the following:
+ * MAT151: outgoingEdgeArray["CS112"]
+ * CS111: outgoingEdgeArray["CS112"]
  * 
  * @param -
  *      courseArray - JSON containing data of the whole system (courses of a single academic major)
@@ -441,7 +455,7 @@ function initializeParticleSystem()
                 //iterate all of a course prerequisites
                 for(var i = 0; i < coursePrereq.length; i++)
                 {
-                    var prereq = coursePrereq[i];
+                    var prereq = coursePrereq[i]; // May be a string or a list
 
                     //Check if value is an instance of an array
                     if((prereq instanceof Array))
@@ -449,6 +463,7 @@ function initializeParticleSystem()
                         //iterate all prereq with conditional OR
                         for(var j = 0; j < prereq.length; j++)
                         {
+                            // Inspecting if an array has been created
                             if(!((outgoingEdgeGraphArray[prereq[j]]) instanceof Array))
                             {
                                  outgoingEdgeGraphArray[prereq[j]] = new Array(); //create new array property
@@ -458,8 +473,10 @@ function initializeParticleSystem()
                         }
                     }
 
+                    // Single String
                     else   
                     {
+                        // Inspecting if an array has been created
                         if(!((outgoingEdgeGraphArray[prereq]) instanceof Array))
                         {
                             outgoingEdgeGraphArray[prereq] = new Array(); //create new array property
